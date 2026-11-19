@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<meta name="theme-color" content="#0d131c">
+	<title>NesTwee</title>
+	<link rel="stylesheet" href="styles.css">
+	<link rel="stylesheet" href="preview.css">
+	<link rel="stylesheet" href="phone.css">
+</head>
+<body>
+	<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+		<defs>
+			<symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z M14 3v4h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+			<symbol id="i-zip" viewBox="0 0 24 24"><path d="M5 3h14v18H5z M11 3v2h2v2h-2v2h2v2h-2v3h2v2h-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+			<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+			<symbol id="i-hammer" viewBox="0 0 24 24"><path d="M14 4l6 6-2.5 2.5-6-6zM11.5 6.5l-8 8 3 3 8-8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+			<symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5C6.5 4 9.5 4 12 5.5v14C9.5 18 6.5 18 4 19.5zM20 5.5C17.5 4 14.5 4 12 5.5v14c2.5-1.5 5.5-1.5 8 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+			<symbol id="i-access" viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2" fill="currentColor"/><path d="M4 8.5l8 1.5 8-1.5M12 10v5l-3.5 6M12 15l3.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+			<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+			<symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+			<symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+			<symbol id="i-share" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="5.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="18.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.2 10.9l7.6-4.2M8.2 13.1l7.6 4.2" stroke="currentColor" stroke-width="1.8"/></symbol>
+			<symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3l10 18H2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v5M12 18v.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+			<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+		</defs>
+	</svg>
+
+	<div class="phone">
+		<header class="p-top">
+			<img src="assets/logo.svg" alt="" class="p-logo" width="34" height="34">
+			<h1 class="p-title">NesTwee</h1>
+			<button type="button" class="btn btn-ghost btn-icon" id="theme-toggle" aria-pressed="true" aria-label="Dark theme is on. Switch to light"><svg class="icon" aria-hidden="true"><use href="#i-moon"/></svg></button>
+		</header>
+
+		<main class="p-main" id="main">
+			<!-- BUILD -->
+			<section class="p-page" data-page="build" aria-labelledby="t-build">
+				<h2 id="t-build" class="visually-hidden">Build</h2>
+
+				<div class="card">
+					<h3>1. Your story files</h3>
+					<p class="small muted">Pick a <strong>.zip</strong> of your project folder (folders inside it are searched too), or pick the files themselves.</p>
+					<ul class="path-list" id="sources" data-empty="Nothing picked yet."></ul>
+					<div class="p-two">
+						<button type="button" class="btn" id="pick-zip"><svg class="icon" aria-hidden="true"><use href="#i-zip"/></svg>Pick .zip</button>
+						<button type="button" class="btn" id="pick-files"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg>Pick files</button>
+					</div>
+					<div id="summary" class="scan-summary" aria-live="polite"></div>
+				</div>
+
+				<div class="card">
+					<h3>2. What to make</h3>
+					<label class="field">
+						<span class="label">Make</span>
+						<select id="mode">
+							<option value="html">Playable story (HTML)</option>
+							<option value="proof">Proofing copy</option>
+							<option value="archive-twine2">Twine 2 archive</option>
+							<option value="twee3">Twee source (decompile)</option>
+						</select>
+					</label>
+					<label class="field" id="format-field">
+						<span class="label">Story format</span>
+						<select id="format"></select>
+					</label>
+					<label class="field" id="proof-field" hidden>
+						<span class="label">Proofing format</span>
+						<select id="proof-format"></select>
+					</label>
+					<details class="p-more">
+						<summary>More options</summary>
+						<label class="field">
+							<span class="label">File name</span>
+							<input type="text" id="out-name" placeholder="story.html" spellcheck="false" autocapitalize="off">
+						</label>
+						<label class="field">
+							<span class="label">Starting passage</span>
+							<input type="text" id="start" placeholder="Automatic" spellcheck="false" autocapitalize="off">
+						</label>
+						<label class="check"><input type="checkbox" id="test"><span>Test mode (debug tools on)</span></label>
+						<label class="check"><input type="checkbox" id="trim" checked><span>Trim whitespace around passages</span></label>
+						<label class="check"><input type="checkbox" id="twee2"><span>Twee2 compatibility</span></label>
+						<label class="check"><input type="checkbox" id="skip-hidden"><span>Skip hidden files</span></label>
+					</details>
+				</div>
+
+				<div class="card">
+					<h3>Presets</h3>
+					<div class="p-preset" data-kind="build"></div>
+				</div>
+
+				<div id="result" class="card p-result" hidden aria-live="polite"></div>
+			</section>
+
+			<!-- FORMATS -->
+			<section class="p-page" data-page="formats" aria-labelledby="t-formats" hidden>
+				<h2 id="t-formats">Story formats</h2>
+				<p class="small muted">Built-in formats are ready to use. Import any Twine 2 <code>format.js</code> (story, proofing or editing formats) to add more. An imported format replaces a built-in one with the same name and major version.</p>
+				<button type="button" class="btn btn-primary p-wide" id="import-format"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg>Import format.js</button>
+				<ul class="p-formats" id="formats"></ul>
+			</section>
+
+			<!-- SETTINGS -->
+			<section class="p-page" data-page="settings" aria-labelledby="t-settings" hidden>
+				<h2 id="t-settings">Accessibility</h2>
+				<p class="small muted">Changes show in the preview first. Tap <strong>Apply</strong> to use them.</p>
+
+				<div class="preview p-preview" id="a11y-preview" role="region" aria-label="Preview of the selected settings">
+					<div class="pv-body">
+						<h4>The Lighthouse Keeper</h4>
+						<p>Built <strong>42 passages</strong>. Open the <a href="#" tabindex="-1">story</a> to play.</p>
+						<div class="callout callout-warn"><svg class="icon" aria-hidden="true"><use href="#i-warn"/></svg><span>Warning: duplicate passage “Start”.</span></div>
+						<span class="btn btn-primary">Build</span>
+					</div>
+				</div>
+
+				<div class="card">
+					<fieldset class="segmented">
+						<legend class="label">Theme</legend>
+						<label><input type="radio" name="a-theme" value="dark"><span>Dark</span></label>
+						<label><input type="radio" name="a-theme" value="light"><span>Light</span></label>
+					</fieldset>
+					<label class="field">
+						<span class="label">Font</span>
+						<select id="a-font">
+							<option value="sans">Sans-serif (default)</option>
+							<option value="opendyslexic">OpenDyslexic</option>
+							<option value="serif">Serif</option>
+						</select>
+					</label>
+					<div id="font-warning" class="callout callout-warn" role="alert" hidden></div>
+					<div class="field">
+						<span class="label" id="a-scale-label">Text size: <output id="a-scale-out">100%</output></span>
+						<div class="row">
+							<button type="button" class="btn btn-icon" id="a-scale-down" aria-label="Smaller text"><span aria-hidden="true" class="small-a">A</span></button>
+							<input type="range" id="a-scale" min="80" max="200" step="5" class="grow" aria-labelledby="a-scale-label">
+							<button type="button" class="btn btn-icon" id="a-scale-up" aria-label="Bigger text"><span aria-hidden="true" class="big-a">A</span></button>
+						</div>
+					</div>
+					<div class="field">
+						<span class="label" id="a-contrast-label">Contrast: <output id="a-contrast-out">Standard</output></span>
+						<input type="range" id="a-contrast" min="0" max="100" step="5" aria-labelledby="a-contrast-label">
+						<div class="range-ends small muted"><span>Standard</span><span>Black &amp; white</span></div>
+					</div>
+					<label class="check"><input type="checkbox" id="a-spacing"><span>Extra letter and line spacing</span></label>
+					<label class="check"><input type="checkbox" id="a-underline"><span>Always underline links</span></label>
+					<label class="check"><input type="checkbox" id="a-motion"><span>Reduce motion</span></label>
+					<div class="p-two mt">
+						<button type="button" class="btn btn-primary" id="a-apply">Apply</button>
+						<button type="button" class="btn" id="a-revert">Undo</button>
+					</div>
+					<button type="button" class="btn btn-quiet p-wide" id="a-reset">Reset to defaults</button>
+				</div>
+
+				<div class="card">
+					<h3>Presets</h3>
+					<div class="p-preset" data-kind="a11y"></div>
+				</div>
+
+				<p class="small muted p-about">NesTwee <span id="version"></span> for phones. The compiler is a port of Tweego by Thomas Michael Edwards. OpenDyslexic is included under the SIL Open Font License.</p>
+			</section>
+		</main>
+
+		<div class="p-buildbar" id="buildbar">
+			<button type="button" class="btn btn-primary btn-lg p-wide" id="build"><svg class="icon" aria-hidden="true"><use href="#i-hammer"/></svg>Build</button>
+		</div>
+
+		<nav class="p-nav" aria-label="Sections">
+			<button type="button" data-page="build" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#i-hammer"/></svg><span>Build</span></button>
+			<button type="button" data-page="formats"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg><span>Formats</span></button>
+			<button type="button" data-page="settings"><svg class="icon" aria-hidden="true"><use href="#i-access"/></svg><span>Accessibility</span></button>
+		</nav>
+	</div>
+
+	<div class="toasts" id="toasts" aria-live="assertive"></div>
+	<script src="bridge.js"></script>
+	<script src="phone.js"></script>
+</body>
+</html>

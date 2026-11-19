@@ -1,0 +1,18 @@
+/* Tablet build of the desktop interface. */
+.nt-tablet #watch-toggle,
+.nt-tablet #formatdirs-add,
+.nt-tablet #build-head-browse + .btn,
+.nt-tablet [data-page='formats'] .card:last-child p {
+	display: none;
+}
+.nt-tablet .btn,
+.nt-tablet .nav-item {
+	min-height: 2.75em; /* comfortable touch targets */
+}
+.nt-tablet input[type='checkbox'] {
+	width: 1.35em;
+	height: 1.35em;
+}
+.nt-tablet .main {
+	-webkit-overflow-scrolling: touch;
+}

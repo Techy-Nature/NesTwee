@@ -13,6 +13,7 @@ This guide walks through everything NesTwee can do, one step at a time. If you j
 - [9. Build an installer](#9-build-an-installer)
 - [10. Troubleshooting](#10-troubleshooting)
 - [11. Where things are saved](#11-where-things-are-saved)
+- [12. Android phones and tablets](#12-android-phones-and-tablets)
 
 ---
 
@@ -202,5 +203,62 @@ Your settings and presets are saved in one file, `nestwee-settings.json`, in the
 - **Windows:** `%APPDATA%\NesTwee`
 - **macOS:** `~/Library/Application Support/NesTwee`
 - **Linux:** `~/.config/NesTwee`
+- **Android:** inside the app itself (cleared if you uninstall it or clear its storage)
 
 Delete that file to start fresh. Your stories are never stored there.
+
+---
+
+## 12. Android phones and tablets
+
+There are two Android apps. **NesTwee** is simplified for phones. **NesTwee Tablet** looks and works like the desktop app. You can install either one, or both.
+
+### Install
+
+The apps aren't on the Play Store, so you install the .apk file yourself ("sideloading"). This is safe for apps you trust and only needs doing once per update.
+
+1. On your phone or tablet, open the GitHub page for the latest **Build apps** run (Actions tab), or the latest release, and download **NesTwee-Android**. It's a .zip holding two files:
+   - `NesTwee-…-android.apk` for phones
+   - `NesTwee-Tablet-…-android.apk` for tablets
+2. Open the Files app (or your browser's downloads), open the .zip, and tap the .apk you want.
+3. Android asks whether to allow installing apps from this source. Tap **Settings**, turn on **Allow from this source**, then go back.
+4. Tap **Install**. If Play Protect warns that it doesn't recognise the app, tap **More details → Install anyway**.
+5. Open **NesTwee** (or **NesTwee Tablet**) from your app drawer.
+
+**Updating:** install the new .apk over the old one. If Android says **"App not installed"** or that the package conflicts, uninstall the old version first. (Each build is signed with a temporary key, so Android sometimes can't tell it's the same app.) Uninstalling also removes your presets and imported formats, so note down any presets you want to keep.
+
+### Build a story on a phone
+
+1. On your computer (or in your phone's Files app), make a **.zip** of your story folder. On Android, most Files apps can do this: long-press the folder and look for **Compress** or **Zip**.
+2. In NesTwee, on the **Build** tab, tap **Pick .zip** and choose it. You can also tap **Pick files** to choose `.twee`, `.tw`, `.html`, `.css` and `.js` files directly.
+3. Under **What to make**, pick *Playable story*, *Proofing copy*, *Twine 2 archive* or *Twee source*.
+4. Tap **Build** at the bottom.
+5. Tap **Preview** to play the story inside the app, or **Share** to send the file to Drive, email, Discord and so on.
+
+Built stories are saved in **Documents/NesTwee** on your device. On Android 10 and older the app asks once for storage permission. If you say no, the file is kept inside the app and **Share** is the way to get it out.
+
+### Build a story on a tablet
+
+The tablet app works like the desktop one (see sections 2 to 8), with these differences:
+
+| Desktop | Tablet |
+| --- | --- |
+| **Add folders…** | **Add .zip…** (a zip of the folder; its subfolders are searched too) |
+| **Open output** | **Preview** (plays the story in the app) |
+| **Show in folder** | **Share** |
+| Output file anywhere | Always saved in **Documents/NesTwee** under the name you give |
+| Watch mode, extra format folders | Not available on Android |
+
+### Story formats on Android
+
+All the built-in formats (SugarCube, Harlowe, Chapbook, Snowman, Duplex and Paperthin) are included. To add another, download its `format.js` to your device, then tap **Import format.js** on the Formats page and pick it.
+
+### Troubleshooting on Android
+
+| Problem | What to do |
+| --- | --- |
+| "App not installed" | Uninstall the older NesTwee first, then install again. |
+| The summary shows no Twee files | Make sure the zip holds `.twee` or `.tw` files (any subfolder is fine). If they're in a folder whose name starts with a dot, turn off **Skip hidden files**. |
+| A story doesn't play right in Preview | Tap **Share** and open the file in Chrome to play it as a normal web page. |
+| Text is too small or too big | Use the Accessibility tab. Text size goes from 80% to 200%. |
+

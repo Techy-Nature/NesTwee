@@ -48,3 +48,6 @@ OpenDyslexic by Abbie Gonzalez, licensed under the SIL Open Font License 1.1. Th
 - [semver](https://github.com/npm/node-semver): ISC
 - [iconv-lite](https://github.com/ashtuchkin/iconv-lite): MIT
 - [Electron](https://www.electronjs.org/) and [electron-builder](https://www.electron.build/) (development and packaging): MIT
+- [Capacitor](https://capacitorjs.com/) with @capacitor/filesystem and @capacitor/share (Android apps): MIT
+- [fflate](https://github.com/101arrowz/fflate) (reading .zip files on Android): MIT
+- [esbuild](https://esbuild.github.io/) (bundling the Android apps): MIT

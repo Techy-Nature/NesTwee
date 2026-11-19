@@ -4,7 +4,7 @@
 
 <h1 align="center">NesTwee</h1>
 
-<p align="center">A desktop app that does everything <a href="https://github.com/tmedwards/tweego">Tweego</a> does, with buttons instead of command-line flags.</p>
+<p align="center">A desktop and Android app that does everything <a href="https://github.com/tmedwards/tweego">Tweego</a> does, with buttons instead of command-line flags.</p>
 
 NesTwee compiles Twee and Twine sources into playable HTML stories, makes Twine 1 and Twine 2 archives, decompiles stories back into Twee, and can watch your folders and rebuild every time you save. It has a dark theme by default, a light theme, and an accessibility panel with OpenDyslexic, text sizing and a contrast slider that goes all the way to pure black and white.
 
@@ -43,6 +43,19 @@ Extras that Tweego doesn't have:
 - **Any other format, including proofing formats**: **Import format.js…** copies any Twine 2 story or proofing format into NesTwee, and **Proofing copy** builds your story with a proofing format of your choice.
 - **A command-line twin**, `nestwee-cli`, that accepts Tweego's flags (handy for scripts and CI).
 
+## On Android phones and tablets
+
+There are two Android apps, built from the same code:
+
+| **NesTwee** (phones) | **NesTwee Tablet** |
+| --- | --- |
+| ![The phone app after building a story](docs/screenshots/android-phone.png) | ![The tablet app: the desktop layout with a build log](docs/screenshots/android-tablet.png) |
+| One column, big buttons and three tabs at the bottom: Build, Formats and Accessibility. Made for small screens (it fits a 320-pixel-wide phone). | The same layout as the desktop app: sidebar, Build, Decompile, Story formats, Accessibility, presets and the build log. |
+
+Both run the whole compiler on the device, with no internet needed. Android can't hand an app a whole folder, so you pick a **.zip** of your story folder (folders inside it are searched too) or the files themselves. Built stories are saved to **Documents/NesTwee**, and you can play them straight away with **Preview** or send them anywhere with **Share**. Watch mode and extra format folders are desktop-only.
+
+Both apps can be installed side by side. See **[Install on Android](docs/GUIDE.md#12-android-phones-and-tablets)** for the step-by-step guide.
+
 ## Getting started (step by step)
 
 You need **Node.js 20 or newer** (which includes `npm`). Get it from [nodejs.org](https://nodejs.org/) if you don't have it.
@@ -75,7 +88,7 @@ For a deeper walkthrough (watch mode, modules, presets, adding story formats, bu
 The repository has a GitHub Actions workflow (`.github/workflows/build.yml`) that builds the Windows, macOS and Linux apps on GitHub's own Windows, Mac and Linux machines.
 
 1. Push to `main`, open a pull request, or start it by hand: **Actions** tab → **Build apps** → **Run workflow**.
-2. When it finishes (about 5–10 minutes), open the run and download **NesTwee-Windows**, **NesTwee-macOS** or **NesTwee-Linux** from the **Artifacts** section at the bottom.
+2. When it finishes (about 5–10 minutes), open the run and download **NesTwee-Windows**, **NesTwee-macOS**, **NesTwee-Linux** or **NesTwee-Android** (both .apk files) from the **Artifacts** section at the bottom.
 3. To publish a release, push a version tag, for example:
    ```sh
    git tag v0.1.0
@@ -95,6 +108,17 @@ npm run dist:linux  # AppImage + .deb
 ```
 
 The finished files land in the `dist/` folder.
+
+To build the Android apps yourself you need [Android Studio](https://developer.android.com/studio) (or the Android SDK and Java 21):
+
+```sh
+npm run android:phone     # or: npm run android:tablet
+cd android
+./gradlew assembleDebug                            # phone app
+./gradlew assembleDebug -PnestweeVariant=tablet    # tablet app (run after android:tablet)
+```
+
+The .apk lands in `android/app/build/outputs/apk/debug/`. You can also open the `android` folder in Android Studio and press **Run**. To try the mobile interface in a desktop browser instead, run `npm run web:phone` (or `web:tablet`) and serve the `mobile/www` folder with any static web server.
 
 ## Using the command line version
 
@@ -120,6 +144,9 @@ src/engine/    The compiler: a JavaScript port of Tweego (lexer, story model, fo
 src/main/      Electron main process: window, dialogs, settings file, IPC
 src/renderer/  The interface: index.html, styles.css, app.js
 src/cli.js     Command-line front end with Tweego-compatible flags
+mobile/        Android apps: bridge.js (in-browser stand-in for the desktop's file access),
+               phone/ (the phone interface), tablet/ (tweaks to the desktop interface), build.mjs
+android/       The Capacitor Android project that wraps mobile/www
 storyformats/  Bundled story formats
 assets/        Logo, app icon and the OpenDyslexic font
 ```

@@ -17,7 +17,11 @@
     "dist": "electron-builder",
     "dist:win": "electron-builder --win",
     "dist:mac": "electron-builder --mac",
-    "dist:linux": "electron-builder --linux"
+    "dist:linux": "electron-builder --linux",
+    "web:phone": "node mobile/build.mjs phone",
+    "web:tablet": "node mobile/build.mjs tablet",
+    "android:phone": "node mobile/build.mjs phone && npx cap sync android",
+    "android:tablet": "node mobile/build.mjs tablet && npx cap sync android"
   },
   "dependencies": {
     "iconv-lite": "0.7.3",
@@ -25,8 +29,15 @@
     "semver": "7.8.5"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3",
     "electron": "44.10.1",
-    "electron-builder": "26.18.1"
+    "electron-builder": "26.18.1",
+    "esbuild": "^0.28.2",
+    "fflate": "^0.7.5"
   },
   "build": {
     "appId": "com.techynature.nestwee",
