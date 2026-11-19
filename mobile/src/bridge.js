@@ -655,6 +655,8 @@ const api = {
 	async watchStart(config) {
 		await api.watchStop();
 		const first = await api.build(config);
+		// Show the first build's messages in the log, as the desktop app does.
+		for (const e of first.log || []) emitLog(e);
 		await loadLibrary();
 		const refs = [...(config.sources || []), ...(config.modules || []), ...(config.headFile ? [config.headFile] : [])];
 		const folders = refs.map((r) => library.get(r)).filter((i) => i && i.kind === 'folder');
