@@ -228,3 +228,28 @@ input[type='range'] {
 #folder-settings .nt-grant {
 	width: 100%;
 }
+
+.p-buildrow {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 0.6em;
+}
+#watch[aria-pressed='true'] {
+	border-color: var(--accent);
+	color: var(--text);
+}
+.p-watching {
+	margin: 0 0 0.5em;
+	color: var(--muted);
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+}
+.p-watching::before {
+	content: '';
+	width: 0.6em;
+	height: 0.6em;
+	border-radius: 50%;
+	background: var(--success, #5fd3a6);
+	flex: none;
+}

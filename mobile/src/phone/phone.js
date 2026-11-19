@@ -18,7 +18,7 @@
 		'Maximum contrast (dark)': { ...DEFAULT_A11Y, contrast: 100 },
 		'Maximum contrast (light)': { ...DEFAULT_A11Y, theme: 'light', contrast: 100 },
 	};
-	const DEFAULT_BUILD = { sources: [], mode: 'html', format: '', proofFormat: '', outName: '', start: '', test: false, trim: true, twee2Compat: false, skipHidden: false };
+	const DEFAULT_BUILD = { sources: [], mode: 'html', format: '', proofFormat: '', outName: '', start: '', test: false, trim: true, twee2Compat: false, skipHidden: false, saveTo: '' };
 	const BUILTIN_BUILD = {
 		'SugarCube 2': { mode: 'html', format: 'sugarcube-2' },
 		'Harlowe 3': { mode: 'html', format: 'harlowe-3' },
@@ -37,6 +37,7 @@
 		presets: { a11y: {}, build: {} },
 		formats: [],
 		last: null,
+		watching: false,
 		fontOk: null,
 	};
 
@@ -245,6 +246,7 @@
 				)
 			)
 		);
+		if ($('#save-to').value !== (b.saveTo || '')) fillSaveTo();
 		$('#mode').value = b.mode;
 		$('#format-field').hidden = b.mode !== 'html';
 		$('#proof-field').hidden = b.mode !== 'proof';
@@ -316,18 +318,11 @@
 		);
 	}
 
-	async function runBuild() {
+	function buildConfig() {
 		const b = state.build;
-		if (!b.sources.length) {
-			toast('Pick your story files first.', 'error');
-			return;
-		}
-		const btn = $('#build');
-		btn.disabled = true;
-		btn.lastChild.textContent = 'Building…';
-		const cfg = {
+		return {
 			sources: b.sources,
-			outFile: `NesTwee/${b.outName.trim() || defaultName()}`,
+			outFile: `${b.saveTo || 'NesTwee'}/${b.outName.trim() || defaultName()}`,
 			mode: b.mode === 'proof' ? 'html' : b.mode,
 			format: b.mode === 'proof' ? b.proofFormat || $('#proof-format').value : b.format,
 			start: b.start,
@@ -337,9 +332,23 @@
 			skipHidden: b.skipHidden,
 			logStats: true,
 		};
-		const res = await api.build(cfg);
-		btn.disabled = false;
+	}
+
+	async function runBuild() {
+		if (!state.build.sources.length) {
+			toast('Pick your story files first.', 'error');
+			return;
+		}
+		const btn = $('#build');
+		btn.disabled = true;
+		btn.lastChild.textContent = 'Building…';
+		const res = await api.build(buildConfig());
+		btn.disabled = state.watching;
 		btn.lastChild.textContent = 'Build';
+		showResult(res, true);
+	}
+
+	function showResult(res, scroll) {
 		const box = $('#result');
 		box.hidden = false;
 		if (res.ok) {
@@ -360,7 +369,73 @@
 			const err = [...res.log].reverse().find((e) => e.level === 'error');
 			box.replaceChildren(el('h3', {}, el('span', { class: 'status fail' }, '✖'), 'The build stopped'), (err && ifidHelp(err.message)) || null, logList(res.log));
 		}
-		box.scrollIntoView({ behavior: state.a11y.motion ? 'auto' : 'smooth', block: 'start' });
+		if (scroll) box.scrollIntoView({ behavior: state.a11y.motion ? 'auto' : 'smooth', block: 'start' });
+	}
+
+	// ---------------------------------------------------------------- watch mode
+
+	function setWatching(on, note) {
+		state.watching = on;
+		const w = $('#watch');
+		w.setAttribute('aria-pressed', String(on));
+		w.querySelector('use').setAttribute('href', on ? '#i-stop' : '#i-eye');
+		w.querySelector('span').textContent = on ? 'Stop' : 'Watch';
+		w.setAttribute('aria-label', on ? 'Stop watching' : 'Watch and rebuild when files change');
+		$('#build').disabled = on;
+		const p = $('#watching');
+		p.hidden = !on;
+		if (on) p.textContent = note || 'Watching your folders. NesTwee rebuilds when a file changes.';
+	}
+
+	async function toggleWatch() {
+		if (state.watching) {
+			await api.watchStop();
+			toast('Stopped watching.');
+			return;
+		}
+		if (!state.build.sources.length) {
+			toast('Add your story folder first.', 'error');
+			return;
+		}
+		const w = $('#watch');
+		w.disabled = true;
+		const res = await api.watchStart(buildConfig());
+		w.disabled = false;
+		showResult(res.first, true);
+		if (!res.watching) toast('Watch mode follows folders only. Add your story with Add folder.', 'error', 6000);
+	}
+
+	function wireWatch() {
+		$('#watch').addEventListener('click', toggleWatch);
+		api.onWatchState((s) => {
+			const when = s.lastBuild ? new Date(s.lastBuild.time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }) : '';
+			setWatching(!!s.watching, s.lastBuild ? `Watching. ${s.lastBuild.ok ? 'Built' : 'Build failed'} at ${when}.` : '');
+			if (s.lastBuild && s.lastBuild.result && state.watching) showResult(s.lastBuild.result, false);
+		});
+	}
+
+	// ---------------------------------------------------------------- save to (export folder)
+
+	async function fillSaveTo() {
+		const sel = $('#save-to');
+		const folders = api.folderAccess ? await api.folderAccess.list() : [];
+		const cur = state.build.saveTo;
+		const opts = [el('option', { value: '' }, 'Documents/NesTwee (default)')];
+		for (const f of folders) if (f.available !== false) opts.push(el('option', { value: f.place }, f.place));
+		if (cur && !folders.some((f) => f.place === cur)) opts.push(el('option', { value: cur }, `${cur} (no permission)`));
+		if (api.folderAccess && api.folderAccess.available) opts.push(el('option', { value: '__choose' }, 'Choose a folder…'));
+		sel.replaceChildren(...opts);
+		sel.value = cur;
+	}
+
+	async function onSaveTo(e) {
+		if (e.target.value !== '__choose') return update({ saveTo: e.target.value });
+		const f = await api.folderAccess.grant();
+		if (f) {
+			update({ saveTo: f.place });
+			toast(`Builds will be saved in ${f.place}.`, 'success');
+		}
+		fillSaveTo();
 	}
 
 	function wireBuild() {
@@ -377,6 +452,8 @@
 		$('#twee2').addEventListener('change', (e) => update({ twee2Compat: e.target.checked }));
 		$('#skip-hidden').addEventListener('change', (e) => (update({ skipHidden: e.target.checked }), summarize()));
 		$('#build').addEventListener('click', runBuild);
+		$('#save-to').addEventListener('change', onSaveTo);
+		$('#save-to').addEventListener('focus', fillSaveTo);
 	}
 
 	// ---------------------------------------------------------------- formats page
@@ -435,6 +512,7 @@
 		wireA11y();
 		wireBuild();
 		wireFormats();
+		wireWatch();
 		$$('.p-nav button').forEach((b) => b.addEventListener('click', () => show(b.dataset.page)));
 		$$('.p-preset').forEach(renderPreset);
 		if (window.nestweeMobile) window.nestweeMobile.renderFolderSettings($('#folder-settings'), { toast: (m, k) => toast(m, k) });
@@ -442,6 +520,7 @@
 		renderBuild();
 		renderA11y();
 		summarize();
+		fillSaveTo();
 	}
 
 	init().catch((err) => toast(`NesTwee could not start: ${err.message}`, 'error', 10000));

@@ -24,6 +24,8 @@
 			<symbol id="i-share" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="5.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="18.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.2 10.9l7.6-4.2M8.2 13.1l7.6 4.2" stroke="currentColor" stroke-width="1.8"/></symbol>
 			<symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3l10 18H2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v5M12 18v.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
 			<symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6l2 2.2h8.4A1.5 1.5 0 0 1 21 8.7v9.8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+			<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+			<symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
 			<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
 		</defs>
 	</svg>
@@ -70,6 +72,10 @@
 					<label class="field" id="proof-field" hidden>
 						<span class="label">Proofing format</span>
 						<select id="proof-format"></select>
+					</label>
+					<label class="field">
+						<span class="label">Save to</span>
+						<select id="save-to"></select>
 					</label>
 					<details class="p-more">
 						<summary>More options</summary>
@@ -168,7 +174,11 @@
 		</main>
 
 		<div class="p-buildbar" id="buildbar">
-			<button type="button" class="btn btn-primary btn-lg p-wide" id="build"><svg class="icon" aria-hidden="true"><use href="#i-hammer"/></svg>Build</button>
+			<p class="p-watching small" id="watching" role="status" hidden></p>
+			<div class="p-buildrow">
+				<button type="button" class="btn btn-primary btn-lg" id="build"><svg class="icon" aria-hidden="true"><use href="#i-hammer"/></svg>Build</button>
+				<button type="button" class="btn btn-lg" id="watch" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg><span>Watch</span></button>
+			</div>
 		</div>
 
 		<nav class="p-nav" aria-label="Sections">

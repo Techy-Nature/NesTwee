@@ -18,6 +18,8 @@ import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -123,7 +125,8 @@ public class FolderAccessPlugin extends Plugin {
             DocumentsContract.Document.COLUMN_DOCUMENT_ID,
             DocumentsContract.Document.COLUMN_DISPLAY_NAME,
             DocumentsContract.Document.COLUMN_MIME_TYPE,
-            DocumentsContract.Document.COLUMN_SIZE
+            DocumentsContract.Document.COLUMN_SIZE,
+            DocumentsContract.Document.COLUMN_LAST_MODIFIED
         };
         JSArray files = new JSArray();
         int count = 0;
@@ -140,6 +143,7 @@ public class FolderAccessPlugin extends Plugin {
                         String name = c.getString(1);
                         String mime = c.getString(2);
                         long size = c.isNull(3) ? 0 : c.getLong(3);
+                        long modified = c.isNull(4) ? 0 : c.getLong(4);
                         String path = dir[1] + name;
                         if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mime)) {
                             stack.push(new String[] { id, path + "/" });
@@ -148,6 +152,7 @@ public class FolderAccessPlugin extends Plugin {
                             f.put("path", path);
                             f.put("id", id);
                             f.put("size", size);
+                            f.put("modified", modified);
                             files.put(f);
                             count++;
                         }
@@ -206,6 +211,67 @@ public class FolderAccessPlugin extends Plugin {
         JSObject r = new JSObject();
         r.put("files", out);
         call.resolve(r);
+    }
+
+    /**
+     * Saves text as a file directly inside a folder NesTwee has permission for,
+     * replacing a file with the same name: { uri, name, data, mime }.
+     */
+    @PluginMethod
+    public void writeFile(PluginCall call) {
+        String uri = call.getString("uri");
+        String name = call.getString("name");
+        String data = call.getString("data", "");
+        String mime = call.getString("mime", "application/octet-stream");
+        if (uri == null || name == null || name.isEmpty()) {
+            call.reject("No folder or file name was given.");
+            return;
+        }
+        Uri tree = Uri.parse(uri);
+        ContentResolver cr = getContext().getContentResolver();
+        try {
+            String rootId = DocumentsContract.getTreeDocumentId(tree);
+            Uri target = null;
+            Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, rootId);
+            String[] cols = { DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME };
+            try (Cursor c = cr.query(children, cols, null, null, null)) {
+                while (c != null && c.moveToNext()) {
+                    if (name.equals(c.getString(1))) {
+                        target = DocumentsContract.buildDocumentUriUsingTree(tree, c.getString(0));
+                        break;
+                    }
+                }
+            }
+            if (target == null) {
+                Uri parent = DocumentsContract.buildDocumentUriUsingTree(tree, rootId);
+                target = DocumentsContract.createDocument(cr, parent, mime, name);
+            }
+            if (target == null) {
+                call.reject("Couldn't create " + name + " in this folder.");
+                return;
+            }
+            byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
+            OutputStream out;
+            try {
+                out = cr.openOutputStream(target, "wt");
+            } catch (Exception notSupported) {
+                out = cr.openOutputStream(target, "w");
+            }
+            if (out == null) {
+                call.reject("Couldn't write " + name + ".");
+                return;
+            }
+            try (OutputStream o = out) {
+                o.write(bytes);
+            }
+            JSObject r = new JSObject();
+            r.put("uri", target.toString());
+            call.resolve(r);
+        } catch (SecurityException e) {
+            call.reject("NesTwee no longer has permission to save in this folder. Give permission again in the Accessibility settings.", "NO_PERMISSION");
+        } catch (Exception e) {
+            call.reject("Couldn't save " + name + ": " + e.getMessage());
+        }
     }
 
     /** { uri, name, place } where place is a readable location like "Documents/Stories". */

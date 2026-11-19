@@ -151,7 +151,7 @@ const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
  * Asks which folder to add when some folders already have permission.
  * Resolves to one of those folders, 'pick' for Android's folder picker, or null.
  */
-function chooseGrantedFolder(folders) {
+function chooseGrantedFolder(folders, { title = 'Add a folder', defaultLabel = '', defaultPlace = '' } = {}) {
 	return new Promise((resolve) => {
 		const back = document.activeElement;
 		const wrap = document.createElement('div');
@@ -160,7 +160,8 @@ function chooseGrantedFolder(folders) {
 		wrap.setAttribute('aria-modal', 'true');
 		wrap.setAttribute('aria-labelledby', 'nt-folders-title');
 		wrap.innerHTML =
-			'<div class="nt-folders-sheet"><h2 id="nt-folders-title">Add a folder</h2>' +
+			`<div class="nt-folders-sheet"><h2 id="nt-folders-title">${esc(title)}</h2>` +
+			(defaultLabel ? `<button type="button" class="btn" data-default><span>${esc(defaultLabel)}<small>${esc(defaultPlace)}</small></span></button>` : '') +
 			folders
 				.map((f, i) => `<button type="button" class="btn" data-i="${i}"><span>${esc(f.name)}<small>${esc(f.place)}</small></span></button>`)
 				.join('') +
@@ -181,12 +182,22 @@ function chooseGrantedFolder(folders) {
 			if (!b) return;
 			if (b.hasAttribute('data-cancel')) done(null);
 			else if (b.hasAttribute('data-pick')) done('pick');
+			else if (b.hasAttribute('data-default')) done('default');
 			else done(folders[+b.dataset.i]);
 		});
 		document.addEventListener('keydown', onKey, true);
 		document.body.append(wrap);
 		wrap.querySelector('button').focus();
 	});
+}
+
+async function grantedFolders() {
+	if (!native) return [];
+	try {
+		return ((await FolderAccess.list()).folders || []).filter((f) => f.available !== false);
+	} catch {
+		return [];
+	}
 }
 
 const folderRef = (f) => addLibraryItem(`${f.name}/ · folder`, 'folder', { uri: f.uri, place: f.place || f.name, files: [] });
@@ -249,9 +260,17 @@ async function listFolder(item) {
 }
 
 /** Reads the story files in a granted folder (only the kinds NesTwee uses). */
-async function readFolder(item, { skipHidden = false } = {}) {
+/** True when `path` (inside a granted folder) is where the build is being saved. */
+function isOutputFile(item, path, outFile) {
+	return !!outFile && `${item.place}/${path}` === String(outFile);
+}
+
+async function readFolder(item, { skipHidden = false, outFile = '' } = {}) {
 	const listed = (await listFolder(item)).filter(
-		(f) => engine.fileKind(f.path) && !(skipHidden && f.path.split('/').some((s) => s.startsWith('.')))
+		(f) =>
+			engine.fileKind(f.path) &&
+			!(skipHidden && f.path.split('/').some((s) => s.startsWith('.'))) &&
+			!isOutputFile(item, f.path, outFile)
 	);
 	const files = [];
 	// Read in batches so one huge folder doesn't stall the bridge.
@@ -323,9 +342,35 @@ function outName(p) {
 	return String(p || 'story.html').split(/[\\/]/).pop() || 'story.html';
 }
 
-async function saveOutput(outFile, text) {
+const DEFAULT_SAVE_DIR = 'NesTwee';
+
+/** "Stories/my-story/story.html" → the granted folder "Stories/my-story", if there is one. */
+async function exportFolderFor(outFile) {
+	const dir = String(outFile || '').split('/').slice(0, -1).join('/');
+	if (!dir || dir === DEFAULT_SAVE_DIR) return null;
+	return (await grantedFolders()).find((f) => f.place === dir) || null;
+}
+
+async function saveOutput(outFile, text, log = () => {}) {
 	const name = outName(outFile);
 	const entry = { name, text, uri: null, where: '' };
+	const folder = native ? await exportFolderFor(outFile) : null;
+	if (folder) {
+		try {
+			const mime = /\.html?$/i.test(name) ? 'text/html' : 'application/octet-stream';
+			await FolderAccess.writeFile({ uri: folder.uri, name, data: text, mime });
+			entry.where = `${folder.place}/${name}`;
+			// A private copy for the share sheet, which can't share folder files directly.
+			const c = await Filesystem.writeFile({ path: `share/${name}`, data: text, directory: Directory.Cache, encoding: Encoding.UTF8, recursive: true });
+			entry.uri = c.uri;
+			outputs.set(entry.where, entry);
+			return entry;
+		} catch (err) {
+			log({ level: 'warn', message: `Couldn't save into ${folder.place} (${err.message || err}). Saving to Documents/NesTwee instead.`, time: Date.now() });
+		}
+	} else if (native && outFile && !String(outFile).startsWith(DEFAULT_SAVE_DIR + '/') && String(outFile).includes('/')) {
+		log({ level: 'warn', message: `NesTwee doesn't have permission for the folder in "${outFile}". Saving to Documents/NesTwee instead. Give permission in the Accessibility settings to save there.`, time: Date.now() });
+	}
 	if (native) {
 		const path = `NesTwee/${name}`;
 		try {
@@ -415,6 +460,30 @@ function readStore() {
 	}
 }
 
+// ------------------------------------------------------------ watch mode helpers
+
+let watcher = null;
+const watchLogFns = new Set();
+const watchStateFns = new Set();
+const emitLog = (e) => watchLogFns.forEach((fn) => fn(e));
+const emitState = (st) => watchStateFns.forEach((fn) => fn(st));
+
+/** A fingerprint of every file (path, size, time) in the watched folders. */
+async function watchSignature(folders, config) {
+	const parts = [];
+	for (const item of folders) {
+		const files = await listFolder(item);
+		for (const f of files) {
+			if (!engine.fileKind(f.path)) continue;
+			if (config.skipHidden && f.path.split('/').some((x) => x.startsWith('.'))) continue;
+			// Skip the output itself if it's being saved inside a watched folder.
+			if (isOutputFile(item, f.path, config.outFile)) continue;
+			parts.push(`${item.uri}|${f.path}|${f.size}|${f.modified || 0}`);
+		}
+	}
+	return parts.sort().join('\n');
+}
+
 const CHARSETS = ['utf-8', 'utf-16le', 'utf-16be', 'iso-8859-1', 'iso-8859-2', 'iso-8859-15', 'windows-1250', 'windows-1251', 'windows-1252', 'koi8-r', 'shift_jis', 'euc-jp', 'gbk', 'big5', 'euc-kr'];
 
 const api = {
@@ -439,11 +508,32 @@ const api = {
 	},
 	pickZips: () => pickWithInput({ multiple: true, accept: '.zip,application/zip' }),
 	pickFiles: (opts = {}) => pickWithInput({ multiple: opts.multiple !== false, accept: acceptFromFilters(opts.filters) }),
+	/**
+	 * Where to save: Documents/NesTwee, or a folder NesTwee has permission for.
+	 * Returns "<folder>/<name>", e.g. "NesTwee/story.html" or "Stories/my-story/story.html".
+	 */
 	async pickSave(opts = {}) {
 		const ext = opts.filters && opts.filters[0] && opts.filters[0].extensions ? opts.filters[0].extensions[0] : 'html';
 		let name = outName(opts.defaultPath || '');
 		if (!name || !name.includes('.')) name = `story.${ext}`;
-		return `NesTwee/${name}`;
+		if (!native) return `${DEFAULT_SAVE_DIR}/${name}`;
+		const dir = await api.chooseExportFolder();
+		return dir === null ? null : `${dir}/${name}`;
+	},
+
+	/** Asks where builds go. Resolves to a folder place, "NesTwee" for the default, or null. */
+	async chooseExportFolder() {
+		if (!native) return DEFAULT_SAVE_DIR;
+		const choice = await chooseGrantedFolder(await grantedFolders(), {
+			title: 'Save builds to',
+			defaultLabel: 'Documents/NesTwee',
+			defaultPlace: 'The default',
+		});
+		if (!choice) return null;
+		if (choice === 'default') return DEFAULT_SAVE_DIR;
+		if (choice !== 'pick') return choice.place;
+		const r = await FolderAccess.pick();
+		return r && !r.cancelled && r.uri ? r.place || r.name : null;
 	},
 
 	async scan(refs, opts = {}) {
@@ -458,7 +548,7 @@ const api = {
 				continue;
 			}
 			try {
-				files.push(...(await listFolder(item)));
+				files.push(...(await listFolder(item)).filter((f) => !isOutputFile(item, f.path, opts.outFile)));
 			} catch (err) {
 				warnings.push(`${r}: ${err.message || err}`);
 			}
@@ -532,7 +622,7 @@ const api = {
 		const started = Date.now();
 		let sources, modules, head;
 		try {
-			const opts = { skipHidden: !!config.skipHidden };
+			const opts = { skipHidden: !!config.skipHidden, outFile: config.outFile };
 			sources = await resolveRefs(config.sources, opts);
 			modules = await resolveRefs(config.modules, opts);
 			[head] = config.headFile ? await resolveRefs([config.headFile]) : [];
@@ -551,19 +641,64 @@ const api = {
 			creatorVersion: VERSION,
 		});
 		if (!res.ok) return res;
-		const saved = await saveOutput(config.outFile, res.output);
+		const saved = await saveOutput(config.outFile, res.output, (e) => res.log.push(e));
 		res.log.push({ level: 'success', message: `Built ${saved.name} in ${Date.now() - started} ms (${res.stats.storyPassages} story passages). Saved to ${saved.where}.`, time: Date.now() });
 		return { ok: true, outFile: saved.where, stats: res.stats, log: res.log, text: res.output };
 	},
 
-	// Android has no folder watching for picked files; watching just builds once.
+	/*
+		Watch mode: folder sources are checked every couple of seconds (and
+		whenever the app comes back to the screen), and the story is rebuilt
+		when a file is added, removed or changed. A .zip or picked files are a
+		snapshot, so only folders are watched.
+	*/
 	async watchStart(config) {
+		await api.watchStop();
 		const first = await api.build(config);
-		return { ok: true, watching: 0, first };
+		await loadLibrary();
+		const refs = [...(config.sources || []), ...(config.modules || []), ...(config.headFile ? [config.headFile] : [])];
+		const folders = refs.map((r) => library.get(r)).filter((i) => i && i.kind === 'folder');
+		if (!folders.length) {
+			emitLog({ level: 'warn', message: 'Watch mode only follows folders. Add your story with Add folder (not a .zip or picked files) to rebuild automatically.', time: Date.now() });
+			emitState({ watching: false });
+			return { ok: true, watching: 0, first };
+		}
+		const w = { config, folders, signature: await watchSignature(folders, config), busy: false, timer: null };
+		const check = async () => {
+			if (watcher !== w || w.busy) return;
+			w.busy = true;
+			try {
+				const sig = await watchSignature(w.folders, w.config);
+				if (watcher === w && sig !== w.signature) {
+					w.signature = sig;
+					emitLog({ level: 'info', message: `CHANGED: rebuilding ${outName(w.config.outFile)}`, time: Date.now() });
+					const r = await api.build(w.config);
+					for (const e of r.log || []) emitLog(e);
+					if (watcher === w) emitState({ watching: true, lastBuild: { ok: r.ok, time: Date.now(), outFile: r.outFile, result: r } });
+				}
+			} catch (err) {
+				emitLog({ level: 'error', message: err.message || String(err), time: Date.now() });
+			} finally {
+				w.busy = false;
+			}
+		};
+		w.timer = setInterval(check, 2000);
+		w.onVisible = () => document.visibilityState === 'visible' && check();
+		document.addEventListener('visibilitychange', w.onVisible);
+		watcher = w;
+		emitState({ watching: true, lastBuild: { ok: first.ok, time: Date.now(), outFile: first.outFile, result: first } });
+		return { ok: true, watching: folders.length, first };
 	},
-	watchStop: async () => ({ ok: true }),
-	onWatchLog: () => () => {},
-	onWatchState: () => () => {},
+	async watchStop() {
+		if (!watcher) return { ok: true };
+		clearInterval(watcher.timer);
+		document.removeEventListener('visibilitychange', watcher.onVisible);
+		watcher = null;
+		emitState({ watching: false });
+		return { ok: true };
+	},
+	onWatchLog: (fn) => (watchLogFns.add(fn), () => watchLogFns.delete(fn)),
+	onWatchState: (fn) => (watchStateFns.add(fn), () => watchStateFns.delete(fn)),
 
 	loadStore: async () => readStore(),
 	async saveStore(key, value) {
@@ -630,7 +765,7 @@ function renderFolderSettings(box, { toast = () => {} } = {}) {
 	const p = document.createElement('p');
 	p.className = 'small muted';
 	p.textContent = fa.available
-		? 'Give NesTwee permission to open your story folders. Android shows its folder picker: pick the folder that holds your story. NesTwee can then read it and its subfolders every time you build, so your latest edits are always used. Folders listed here appear when you tap Add folder.'
+		? 'Give NesTwee permission to open your story folders. Android shows its folder picker: pick the folder that holds your story. NesTwee can then read it and its subfolders every time you build, so your latest edits are always used. Folders listed here appear when you tap Add folder, and when you choose where to save builds.'
 		: 'Folder permissions are part of the Android app. In a browser, Add folder asks for a folder each time.';
 	const grantBtn = document.createElement('button');
 	grantBtn.type = 'button';
