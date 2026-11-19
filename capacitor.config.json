@@ -1,0 +1,8 @@
+{
+	"appId": "com.techynature.nestwee",
+	"appName": "NesTwee",
+	"webDir": "mobile/www",
+	"android": {
+		"backgroundColor": "#0d131c"
+	}
+}

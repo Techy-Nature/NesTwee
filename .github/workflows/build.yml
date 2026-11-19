@@ -1,0 +1,131 @@
+name: Build apps
+
+# Builds NesTwee for Windows, macOS and Linux, plus the Android phone and
+# tablet apps (.apk).
+# - Every push and pull request: runs the tests and uploads the apps as
+#   downloadable artifacts (Actions tab → this run → "Artifacts").
+# - Pushing a tag like v0.1.0: also attaches the apps to a GitHub Release.
+# - You can also start it by hand from the Actions tab ("Run workflow").
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            target: --win
+          - name: macOS
+            os: macos-latest
+            target: --mac
+          - name: Linux
+            os: ubuntu-latest
+            target: --linux
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build the app
+        run: npx electron-builder ${{ matrix.target }} --publish never
+        env:
+          # The apps aren't code-signed yet, so skip looking for certificates.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Upload the app
+        uses: actions/upload-artifact@v4
+        with:
+          name: NesTwee-${{ matrix.name }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
+            dist/*.deb
+          if-no-files-found: error
+
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
+            dist/*.deb
+
+  android:
+    name: Android (phone + tablet)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # GitHub's Ubuntu runners already include the Android SDK
+      # (ANDROID_HOME); Gradle fetches any missing platform it needs.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build the phone and tablet apps
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          mkdir -p dist
+          chmod +x android/gradlew
+          for VARIANT in phone tablet; do
+            node mobile/build.mjs "$VARIANT"
+            npx cap sync android
+            (cd android && ./gradlew --no-daemon clean assembleDebug \
+              -PnestweeVariant="$VARIANT" \
+              -PnestweeVersion="$VERSION" \
+              -PnestweeVersionCode="${{ github.run_number }}")
+            NAME=NesTwee
+            [ "$VARIANT" = tablet ] && NAME=NesTwee-Tablet
+            cp android/app/build/outputs/apk/debug/app-debug.apk "dist/$NAME-$VERSION-android.apk"
+          done
+          ls -l dist
+
+      - name: Upload the apps
+        uses: actions/upload-artifact@v4
+        with:
+          name: NesTwee-Android
+          path: dist/*.apk
+          if-no-files-found: error
+
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.apk

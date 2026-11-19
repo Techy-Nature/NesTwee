@@ -1,0 +1,230 @@
+/*
+	Phone layout. Colors, fonts, contrast and text size come from the shared
+	desktop stylesheet (styles.css); this file only lays things out for a
+	narrow touch screen: one column, big touch targets, bottom navigation.
+*/
+
+html,
+body {
+	height: 100%;
+	overflow: hidden;
+}
+
+.phone {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	max-width: 40em;
+	margin: 0 auto;
+}
+
+.p-top {
+	display: flex;
+	align-items: center;
+	gap: 0.6em;
+	padding: 0.5em 0.9em;
+	padding-top: max(0.5em, env(safe-area-inset-top));
+	background: var(--surface);
+	border-bottom: 1px solid var(--border);
+}
+.p-logo {
+	width: 2.2em;
+	height: 2.2em;
+}
+.p-title {
+	font-size: 1.25em;
+	flex: 1;
+}
+
+.p-main {
+	flex: 1;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	padding: 0.9em 0.8em 1.2em;
+}
+.p-page {
+	display: flex;
+	flex-direction: column;
+	gap: 0.9em;
+}
+.p-page > h2 {
+	font-size: 1.35em;
+}
+.p-page > p {
+	margin: 0;
+}
+
+.card {
+	padding: 0.95em 1em 1em;
+}
+
+/* Every control is at least 44px tall for touch. */
+.btn,
+select,
+input[type='text'] {
+	min-height: 2.9em;
+}
+.btn-icon {
+	min-height: 0;
+	width: 2.9em;
+	height: 2.9em;
+}
+.check {
+	padding: 0.35em 0;
+}
+.check input {
+	width: 1.35em;
+	height: 1.35em;
+}
+input[type='range'] {
+	height: 2.4em;
+}
+
+.p-two {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.6em;
+}
+.p-wide {
+	width: 100%;
+}
+
+.path-list .path {
+	direction: ltr;
+	white-space: normal;
+	word-break: break-word;
+}
+
+.p-more summary {
+	cursor: pointer;
+	color: var(--link);
+	font-weight: 600;
+	padding: 0.6em 0;
+	min-height: 2.9em;
+	display: flex;
+	align-items: center;
+}
+
+.p-preset {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+}
+.p-preset .row > select,
+.p-preset .row > input {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+.p-preset .row > .btn {
+	flex: 0 0 auto;
+}
+
+.p-result h3 {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+}
+.p-result .where {
+	font-family: var(--mono-stack);
+	font-size: 0.85em;
+	word-break: break-all;
+	color: var(--muted);
+}
+.p-result .log {
+	padding: 0.4em 0;
+	max-height: 16em;
+	overflow: auto;
+}
+.p-result .callout pre {
+	overflow-x: auto;
+}
+
+.p-formats {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.55em;
+}
+.p-formats li {
+	display: flex;
+	align-items: center;
+	gap: 0.6em;
+	padding: 0.75em 0.9em;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+}
+.p-formats .meta {
+	flex: 1;
+	min-width: 0;
+}
+.p-formats .meta small {
+	display: block;
+	color: var(--muted);
+}
+
+.p-preview {
+	margin: 0;
+}
+.p-about {
+	text-align: center;
+}
+
+.p-buildbar {
+	padding: 0.6em 0.8em;
+	background: var(--surface);
+	border-top: 1px solid var(--border);
+}
+.p-buildbar[hidden] {
+	display: none;
+}
+
+.p-nav {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	background: var(--surface);
+	border-top: 1px solid var(--border);
+	padding-bottom: env(safe-area-inset-bottom);
+}
+.p-nav button {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.15em;
+	padding: 0.55em 0.2em 0.6em;
+	min-height: 3.6em;
+	border: 0;
+	background: none;
+	color: var(--muted);
+	font: inherit;
+	font-size: 0.82em;
+	cursor: pointer;
+	border-top: 3px solid transparent;
+}
+.p-nav button .icon {
+	width: 1.5em;
+	height: 1.5em;
+}
+.p-nav button[aria-current='page'] {
+	color: var(--text);
+	border-top-color: var(--accent);
+	font-weight: 700;
+}
+
+.toasts {
+	left: 0.8em;
+	right: 0.8em;
+	bottom: 9em;
+	max-width: none;
+}
+
+#folder-settings {
+	display: flex;
+	flex-direction: column;
+	gap: 0.6em;
+}
+#folder-settings .nt-grant {
+	width: 100%;
+}

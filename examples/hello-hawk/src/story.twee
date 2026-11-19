@@ -1,0 +1,31 @@
+:: StoryTitle
+Hello, Hawk
+
+:: StoryData
+{
+	"ifid": "8E3B5C2A-6F14-4B7D-9C21-3A5D7E9F1B04",
+	"format": "SugarCube",
+	"format-version": "2.37.0",
+	"start": "Start"
+}
+
+:: Start
+The night is clear and full of stars. Somewhere above you, a hawk circles.
+
+[[Look up|Sky]]
+[[Keep walking|Path]]
+
+:: Sky
+Its wings catch the starlight, tiny white sparks scattered across deep blue.
+
+[[Wave|Wave]]
+
+:: Path
+You keep walking. The hawk follows, curious.
+
+[[Look up|Sky]]
+
+:: Wave
+The hawk dips a wing, as if to say hello.
+
+<<link "Start over" "Start">><</link>>

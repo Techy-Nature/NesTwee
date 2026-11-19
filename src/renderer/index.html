@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>NesTwee</title>
+	<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+	<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+		<defs>
+			<symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.2l2 2.2h8.8A1.5 1.5 0 0 1 21 8.7v9.8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+			<symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z M14 3v4h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+			<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+			<symbol id="i-hammer" viewBox="0 0 24 24"><path d="M14 4l6 6-2.5 2.5-6-6zM11.5 6.5l-8 8 3 3 8-8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+			<symbol id="i-unwrap" viewBox="0 0 24 24"><path d="M8 5L3 12l5 7M16 5l5 7-5 7M13.5 4l-3 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+			<symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5C6.5 4 9.5 4 12 5.5v14C9.5 18 6.5 18 4 19.5zM20 5.5C17.5 4 14.5 4 12 5.5v14c2.5-1.5 5.5-1.5 8 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+			<symbol id="i-access" viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2" fill="currentColor"/><path d="M4 8.5l8 1.5 8-1.5M12 10v5l-3.5 6M12 15l3.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+			<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v6M12 7.5v.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+			<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+			<symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+			<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+			<symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></symbol>
+			<symbol id="i-open" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+			<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+			<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.5-4.5L4 8M4 4v4h4M4 13a8 8 0 0 0 14.5 4.5L20 16M20 20v-4h-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+			<symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3l10 18H2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v5M12 18v.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+		</defs>
+	</svg>
+
+	<a class="skip-link" href="#main">Skip to content</a>
+
+	<div class="app">
+		<header class="topbar">
+			<div class="brand">
+				<img src="../../assets/logo.svg" alt="" class="brand-logo" width="44" height="44">
+				<div>
+					<h1 class="brand-name">NesTwee</h1>
+					<p class="brand-sub">Twee &amp; Twine compiler</p>
+				</div>
+			</div>
+			<div class="topbar-actions">
+				<span id="watch-pill" class="pill pill-watch" hidden><span class="dot" aria-hidden="true"></span>Watching</span>
+				<button id="theme-toggle" class="btn btn-ghost" type="button" aria-pressed="true" title="Switch between dark and light theme">
+					<svg class="icon" aria-hidden="true"><use href="#i-moon"/></svg>
+					<span class="theme-label">Dark</span>
+				</button>
+				<button class="btn btn-ghost" type="button" data-goto="access" title="Accessibility settings">
+					<svg class="icon" aria-hidden="true"><use href="#i-access"/></svg>
+					<span>Accessibility</span>
+				</button>
+			</div>
+		</header>
+
+		<nav class="sidenav" aria-label="Sections">
+			<button type="button" class="nav-item" data-page="build"><svg class="icon" aria-hidden="true"><use href="#i-hammer"/></svg><span>Build</span></button>
+			<button type="button" class="nav-item" data-page="decompile"><svg class="icon" aria-hidden="true"><use href="#i-unwrap"/></svg><span>Decompile</span></button>
+			<button type="button" class="nav-item" data-page="formats"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg><span>Story formats</span></button>
+			<button type="button" class="nav-item" data-page="access"><svg class="icon" aria-hidden="true"><use href="#i-access"/></svg><span>Accessibility</span></button>
+			<button type="button" class="nav-item" data-page="about"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg><span>About</span></button>
+		</nav>
+
+		<main id="main" class="main" tabindex="-1">
+			<!-- BUILD -->
+			<section class="page" data-page="build" aria-labelledby="build-title">
+				<div class="page-head">
+					<div>
+						<h2 id="build-title">Build a story</h2>
+						<p class="muted">Pick your source folders, choose a story format, and compile to a playable HTML file.</p>
+					</div>
+					<div class="preset-bar" data-preset-kind="build"></div>
+				</div>
+				<div id="ifid-help" class="callout callout-attention" role="alert" hidden></div>
+
+				<div class="grid-2">
+					<div class="card">
+						<h3>1. Sources</h3>
+						<p class="muted small">Folders are searched recursively for Twee, Twine HTML, CSS, JS, fonts, images, audio and video.</p>
+						<ul class="path-list" id="sources-list" aria-label="Source folders and files"></ul>
+						<div class="row wrap">
+							<button type="button" class="btn" id="add-source-folders"><svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg>Add folders…</button>
+							<button type="button" class="btn" id="add-source-files"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg>Add files…</button>
+							<button type="button" class="btn btn-quiet" id="rescan-sources" title="Search the folders again"><svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>Rescan</button>
+						</div>
+						<div id="scan-summary" class="scan-summary" aria-live="polite"></div>
+					</div>
+
+					<div class="card">
+						<h3>2. Output</h3>
+						<fieldset class="segmented" id="build-mode">
+							<legend class="small muted">What to make</legend>
+							<label><input type="radio" name="build-mode" value="html" checked><span>Playable HTML</span></label>
+							<label><input type="radio" name="build-mode" value="archive-twine2"><span>Twine 2 archive</span></label>
+							<label><input type="radio" name="build-mode" value="archive-twine1"><span>Twine 1 archive</span></label>
+							<label><input type="radio" name="build-mode" value="proof"><span>Proofing copy</span></label>
+						</fieldset>
+						<label class="field">
+							<span class="label">Output file</span>
+							<div class="row">
+								<input type="text" id="build-out" placeholder="Choose where to save…" spellcheck="false">
+								<button type="button" class="btn" id="build-out-browse">Choose…</button>
+							</div>
+						</label>
+
+						<h3 class="mt">3. Story format</h3>
+						<div class="row wrap">
+							<label class="field grow" id="build-format-field">
+								<span class="label">Format</span>
+								<select id="build-format"></select>
+							</label>
+							<label class="field grow" id="build-proof-field" hidden>
+								<span class="label">Proofing format</span>
+								<select id="build-proof-format"></select>
+							</label>
+							<label class="field grow">
+								<span class="label">Starting passage</span>
+								<input type="text" id="build-start" placeholder="Automatic" aria-describedby="start-help" spellcheck="false">
+							</label>
+						</div>
+						<p class="small muted" id="start-help">Leave the format and starting passage on automatic to use what your StoryData passage says (or SugarCube 2 and “Start”).</p>
+						<p class="small"><button type="button" class="btn btn-sm" id="build-import-format"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg>Import a format…</button> <span class="muted">Use any Twine 2 <code>format.js</code>, including proofing and editing formats.</span></p>
+						<label class="check"><input type="checkbox" id="build-test"><span>Test mode <span class="muted small">(turns on the format's debug tools)</span></span></label>
+					</div>
+				</div>
+
+				<details class="card advanced" id="build-advanced">
+					<summary><h3>Modules, head file &amp; advanced options</h3></summary>
+					<div class="grid-2 inner">
+						<div>
+							<span class="label">Modules <span class="muted small">(CSS, JS and fonts added to the page's &lt;head&gt;)</span></span>
+							<ul class="path-list" id="modules-list" aria-label="Module folders and files"></ul>
+							<div class="row wrap">
+								<button type="button" class="btn" id="add-module-folders"><svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg>Add folders…</button>
+								<button type="button" class="btn" id="add-module-files"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg>Add files…</button>
+							</div>
+							<label class="field mt">
+								<span class="label">Head file <span class="muted small">(its contents are pasted into &lt;head&gt; as-is)</span></span>
+								<div class="row">
+									<input type="text" id="build-head" placeholder="None" spellcheck="false">
+									<button type="button" class="btn" id="build-head-browse">Choose…</button>
+									<button type="button" class="btn btn-icon btn-quiet" id="build-head-clear" aria-label="Clear head file"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
+								</div>
+							</label>
+						</div>
+						<div>
+							<label class="field">
+								<span class="label">Input character set</span>
+								<select id="build-charset"></select>
+							</label>
+							<label class="check"><input type="checkbox" id="build-trim"><span>Trim whitespace around passages</span></label>
+							<label class="check"><input type="checkbox" id="build-twee2"><span>Twee2 compatibility mode</span></label>
+							<label class="check"><input type="checkbox" id="build-skip-hidden"><span>Skip hidden files and folders <span class="muted small">(names starting with “.”)</span></span></label>
+							<label class="check"><input type="checkbox" id="build-log-files"><span>List processed files in the log</span></label>
+							<label class="check"><input type="checkbox" id="build-log-stats"><span>Show story statistics in the log</span></label>
+						</div>
+					</div>
+				</details>
+
+				<div class="actionbar">
+					<button type="button" class="btn btn-primary btn-lg" id="build-run" title="Build (Ctrl+B)"><svg class="icon" aria-hidden="true"><use href="#i-hammer"/></svg>Build</button>
+					<button type="button" class="btn btn-lg" id="watch-toggle" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg><span>Watch &amp; rebuild</span></button>
+					<span class="spacer"></span>
+					<button type="button" class="btn" id="build-open" disabled><svg class="icon" aria-hidden="true"><use href="#i-open"/></svg>Open output</button>
+					<button type="button" class="btn" id="build-show" disabled><svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg>Show in folder</button>
+				</div>
+			</section>
+
+			<!-- DECOMPILE -->
+			<section class="page" data-page="decompile" aria-labelledby="decompile-title" hidden>
+				<div class="page-head">
+					<div>
+						<h2 id="decompile-title">Decompile to Twee</h2>
+						<p class="muted">Turn a compiled story or a Twine archive back into editable Twee source.</p>
+					</div>
+				</div>
+				<div class="card narrow">
+					<label class="field">
+						<span class="label">Compiled story or Twine archive (.html)</span>
+						<div class="row">
+							<input type="text" id="dec-in" placeholder="Choose an HTML file…" spellcheck="false">
+							<button type="button" class="btn" id="dec-in-browse">Choose…</button>
+						</div>
+					</label>
+					<label class="field">
+						<span class="label">Save Twee as</span>
+						<div class="row">
+							<input type="text" id="dec-out" placeholder="Choose where to save…" spellcheck="false">
+							<button type="button" class="btn" id="dec-out-browse">Choose…</button>
+						</div>
+					</label>
+					<fieldset class="segmented" id="dec-mode">
+						<legend class="small muted">Twee version</legend>
+						<label><input type="radio" name="dec-mode" value="twee3" checked><span>Twee 3 (recommended)</span></label>
+						<label><input type="radio" name="dec-mode" value="twee1"><span>Twee 1</span></label>
+					</fieldset>
+					<div class="row wrap">
+						<label class="field grow">
+							<span class="label">Line endings</span>
+							<select id="dec-eol">
+								<option value="auto">Match this computer</option>
+								<option value="lf">LF (macOS, Linux)</option>
+								<option value="crlf">CRLF (Windows)</option>
+							</select>
+						</label>
+					</div>
+					<label class="check"><input type="checkbox" id="dec-trim" checked><span>Trim whitespace around passages</span></label>
+					<div class="actionbar flat">
+						<button type="button" class="btn btn-primary btn-lg" id="dec-run"><svg class="icon" aria-hidden="true"><use href="#i-unwrap"/></svg>Decompile</button>
+						<span class="spacer"></span>
+						<button type="button" class="btn" id="dec-open" disabled><svg class="icon" aria-hidden="true"><use href="#i-open"/></svg>Open Twee file</button>
+					</div>
+				</div>
+			</section>
+
+			<!-- FORMATS -->
+			<section class="page" data-page="formats" aria-labelledby="formats-title" hidden>
+				<div class="page-head">
+					<div>
+						<h2 id="formats-title">Story formats</h2>
+						<p class="muted">NesTwee ships with SugarCube, Harlowe, Chapbook, Snowman, Duplex and Paperthin. Import any other <code>format.js</code>, or add folders of formats, to use other formats, proofing formats or newer versions.</p>
+					</div>
+					<div class="row wrap">
+						<button type="button" class="btn btn-primary" id="formats-import"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg>Import format.js…</button>
+						<button type="button" class="btn" id="formats-refresh"><svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>Rescan</button>
+					</div>
+				</div>
+				<div class="card">
+					<h3>Available formats</h3>
+					<div class="table-wrap">
+						<table class="table" id="formats-table">
+							<thead><tr><th scope="col">Name</th><th scope="col">Version</th><th scope="col">ID</th><th scope="col">Kind</th><th scope="col">Folder</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+					<div id="formats-warnings"></div>
+				</div>
+				<div class="card">
+					<h3>Search folders</h3>
+					<p class="muted small">A story formats folder holds one subfolder per format, each with a <code>format.js</code> (Twine 2 style) or <code>header.html</code> (Twine 1 style). Like Tweego, NesTwee also looks in <code>storyformats</code> folders in your home folder and next to the app, and in <code>TWEEGO_PATH</code>.</p>
+					<ul class="path-list" id="formatdirs-list"></ul>
+					<button type="button" class="btn" id="formatdirs-add"><svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg>Add folder…</button>
+				</div>
+			</section>
+
+			<!-- ACCESSIBILITY -->
+			<section class="page" data-page="access" aria-labelledby="access-title" hidden>
+				<div class="page-head">
+					<div>
+						<h2 id="access-title">Accessibility</h2>
+						<p class="muted">Changes show in the preview first. Press <strong>Apply</strong> to use them everywhere.</p>
+					</div>
+					<div class="preset-bar" data-preset-kind="a11y"></div>
+				</div>
+				<div class="grid-2 access-grid">
+					<div class="card">
+						<fieldset class="segmented" id="a11y-theme">
+							<legend class="label">Theme</legend>
+							<label><input type="radio" name="a11y-theme" value="dark"><span>Dark</span></label>
+							<label><input type="radio" name="a11y-theme" value="light"><span>Light</span></label>
+						</fieldset>
+
+						<label class="field">
+							<span class="label">Font</span>
+							<select id="a11y-font">
+								<option value="sans">Sans-serif (default)</option>
+								<option value="opendyslexic">OpenDyslexic</option>
+								<option value="serif">Serif</option>
+							</select>
+						</label>
+						<div id="font-warning" class="callout callout-warn" role="alert" hidden></div>
+
+						<div class="field">
+							<span class="label" id="scale-label">Text size: <output id="a11y-scale-out">100%</output></span>
+							<div class="row">
+								<button type="button" class="btn btn-icon" id="a11y-scale-down" aria-label="Smaller text"><span aria-hidden="true" class="small-a">A</span></button>
+								<input type="range" id="a11y-scale" min="80" max="200" step="5" aria-labelledby="scale-label" class="grow">
+								<button type="button" class="btn btn-icon" id="a11y-scale-up" aria-label="Bigger text"><span aria-hidden="true" class="big-a">A</span></button>
+							</div>
+						</div>
+
+						<div class="field">
+							<span class="label" id="contrast-label">Contrast: <output id="a11y-contrast-out">Standard</output></span>
+							<input type="range" id="a11y-contrast" min="0" max="100" step="5" aria-labelledby="contrast-label">
+							<div class="range-ends small muted"><span>Standard colors</span><span>Pure black &amp; white</span></div>
+						</div>
+
+						<label class="check"><input type="checkbox" id="a11y-spacing"><span>Extra letter and line spacing</span></label>
+						<label class="check"><input type="checkbox" id="a11y-underline"><span>Always underline links</span></label>
+						<label class="check"><input type="checkbox" id="a11y-motion"><span>Reduce motion</span></label>
+
+						<div class="actionbar flat">
+							<button type="button" class="btn btn-primary" id="a11y-apply">Apply</button>
+							<button type="button" class="btn" id="a11y-revert">Undo changes</button>
+							<span class="spacer"></span>
+							<button type="button" class="btn btn-quiet" id="a11y-reset">Reset to defaults</button>
+						</div>
+					</div>
+
+					<div class="card preview-card">
+						<h3>Live preview</h3>
+						<div class="preview" id="a11y-preview" aria-label="Preview of the selected settings" role="region">
+							<div class="pv-top">
+								<img src="../../assets/logo.svg" alt="" width="28" height="28">
+								<strong>NesTwee</strong>
+								<span class="pv-pill">Watching</span>
+							</div>
+							<div class="pv-body">
+								<h4>The Lighthouse Keeper</h4>
+								<p>Compiled <strong>42 passages</strong> with SugarCube. Open the <a href="#" tabindex="-1">output folder</a> to play it.</p>
+								<div class="callout callout-warn"><svg class="icon" aria-hidden="true"><use href="#i-warn"/></svg><span>Warning: Replacing existing passage “Start” with duplicate.</span></div>
+								<div class="callout callout-error"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg><span>Error: Starting passage “Begin” not found.</span></div>
+								<label class="field"><span class="label">Starting passage</span><input type="text" value="Start" tabindex="-1" readonly></label>
+								<div class="row wrap">
+									<span class="btn btn-primary">Build</span>
+									<span class="btn">Watch &amp; rebuild</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- ABOUT -->
+			<section class="page" data-page="about" aria-labelledby="about-title" hidden>
+				<div class="about">
+					<img src="../../assets/logo.svg" alt="NesTwee logo: a sparkling blue hawk" class="about-logo" width="180" height="180">
+					<div>
+						<h2 id="about-title">NesTwee <span class="muted" id="about-version"></span></h2>
+						<p>A desktop app that does everything <a href="https://github.com/tmedwards/tweego" target="_blank" rel="noopener">Tweego</a> does, with buttons instead of command-line flags: compile Twee to HTML, make Twine archives, decompile back to Twee, watch folders, add modules and head files.</p>
+						<p class="small muted">The compiler is a JavaScript port of Tweego by Thomas Michael Edwards (BSD 2-Clause). Bundled story formats keep their own licenses: SugarCube (BSD 2-Clause), Harlowe (Zlib), Chapbook (MIT), Snowman (MIT), Duplex (MIT), Paperthin (Zlib). OpenDyslexic by Abbie Gonzalez is bundled under the SIL Open Font License 1.1.</p>
+						<p class="small muted">Keyboard: <kbd>Ctrl</kbd>+<kbd>B</kbd> builds, <kbd>Ctrl</kbd>+<kbd>=</kbd> / <kbd>Ctrl</kbd>+<kbd>-</kbd> change text size.</p>
+					</div>
+				</div>
+			</section>
+		</main>
+
+		<section class="logdock" aria-labelledby="log-title">
+			<div class="logdock-head">
+				<h2 id="log-title" class="small">Log</h2>
+				<span id="build-status" class="status" aria-live="polite"></span>
+				<span class="spacer"></span>
+				<button type="button" class="btn btn-quiet btn-sm" id="log-copy"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg>Copy</button>
+				<button type="button" class="btn btn-quiet btn-sm" id="log-clear">Clear</button>
+			</div>
+			<ol class="log" id="log" aria-live="polite" aria-relevant="additions"></ol>
+		</section>
+	</div>
+
+	<div class="toasts" id="toasts" aria-live="assertive"></div>
+	<script src="app.js"></script>
+</body>
+</html>

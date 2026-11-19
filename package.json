@@ -1,0 +1,106 @@
+{
+  "name": "nestwee",
+  "productName": "NesTwee",
+  "version": "0.1.0",
+  "description": "A desktop GUI for compiling Twee and Twine stories, with everything Tweego does and friendlier controls.",
+  "main": "src/main/main.js",
+  "author": "Neston Linden Toftwyn",
+  "license": "BSD-2-Clause",
+  "homepage": "https://github.com/Techy-Nature/Nestwee",
+  "bin": {
+    "nestwee-cli": "src/cli.js"
+  },
+  "scripts": {
+    "start": "electron .",
+    "cli": "node src/cli.js",
+    "test": "node --test test/*.test.js",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux",
+    "web:phone": "node mobile/build.mjs phone",
+    "web:tablet": "node mobile/build.mjs tablet",
+    "android:phone": "node mobile/build.mjs phone && npx cap sync android",
+    "android:tablet": "node mobile/build.mjs tablet && npx cap sync android"
+  },
+  "dependencies": {
+    "iconv-lite": "0.7.3",
+    "parse5": "8.0.1",
+    "semver": "7.8.5"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3",
+    "electron": "44.10.1",
+    "electron-builder": "26.18.1",
+    "esbuild": "^0.28.2",
+    "fflate": "^0.7.5"
+  },
+  "build": {
+    "appId": "com.techynature.nestwee",
+    "productName": "NesTwee",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "storyformats",
+        "to": "storyformats"
+      }
+    ],
+    "icon": "assets/icon.png",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Development",
+      "maintainer": "Techy-Nature <45300499+Techy-Nature@users.noreply.github.com>",
+      "executableName": "nestwee"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "portable": {
+      "artifactName": "${productName}-${version}-portable.${ext}"
+    }
+  }
+}
