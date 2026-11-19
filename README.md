@@ -96,6 +96,8 @@ The repository has a GitHub Actions workflow (`.github/workflows/build.yml`) tha
    ```
    The apps are then attached to a GitHub Release automatically.
 
+Every merge to `main` also refreshes a pre-release called **Latest build (main)** on the [Releases page](https://github.com/Techy-Nature/NesTwee/releases/tag/latest), with all the apps (Windows, Mac, Linux and both Android APKs) from the newest code. Use a numbered release for something stable, or **Latest build** for the newest features.
+
 The apps aren't code-signed yet, so Windows SmartScreen and macOS Gatekeeper will warn the first time they're opened (on a Mac: right-click the app → **Open**).
 
 ### Building on your own computer
