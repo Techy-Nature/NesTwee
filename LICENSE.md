@@ -1,6 +1,6 @@
 
 Enter file contents here
-Copyright (c) 2014-2020, [Thomas Michael Edwards](mailto:thomasmedwards@gmail.com) and (c) 2026 [Neston Linden Toftwyn](mailto:techy.nature.art@gmail.com).
+Copyright (c) 2026 [Neston Linden Toftwyn](mailto:techy.nature.art@gmail.com).
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
