@@ -217,10 +217,12 @@ There are two Android apps. **NesTwee** is simplified for phones. **NesTwee Tabl
 
 The apps aren't on the Play Store, so you install the .apk file yourself ("sideloading"). This is safe for apps you trust and only needs doing once per update.
 
-1. On your phone or tablet, open the GitHub page for the latest **Build apps** run (Actions tab), or the latest release, and download **NesTwee-Android**. It's a .zip holding two files:
+1. On your phone or tablet, open the [Releases page](https://github.com/Techy-Nature/NesTwee/releases) (the **Latest build (main)** release has the newest apps) and download the .apk you want:
    - `NesTwee-…-android.apk` for phones
    - `NesTwee-Tablet-…-android.apk` for tablets
-2. Open the Files app (or your browser's downloads), open the .zip, and tap the .apk you want.
+
+   (You can also download **NesTwee-Android** from a **Build apps** run on the Actions tab. That's a .zip holding both files.)
+2. Open your browser's downloads (or the Files app) and tap the .apk.
 3. Android asks whether to allow installing apps from this source. Tap **Settings**, turn on **Allow from this source**, then go back.
 4. Tap **Install**. If Play Protect warns that it doesn't recognise the app, tap **More details → Install anyway**.
 5. Open **NesTwee** (or **NesTwee Tablet**) from your app drawer.
