@@ -27,3 +27,55 @@
 	border: 0;
 	background: #fff;
 }
+
+/* "Which folder?" sheet, shown when folders already have permission. */
+#nt-folders {
+	position: fixed;
+	inset: 0;
+	z-index: 60;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	background: rgb(0 0 0 / 0.55);
+}
+#nt-folders[hidden] {
+	display: none;
+}
+.nt-folders-sheet {
+	width: min(32em, 100%);
+	max-height: 85vh;
+	overflow: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+	padding: 1em;
+	padding-bottom: max(1em, env(safe-area-inset-bottom));
+	background: var(--surface, #141c28);
+	color: var(--text, #e3eaf4);
+	border: 1px solid var(--border, #2f3d54);
+	border-radius: var(--radius, 12px) var(--radius, 12px) 0 0;
+}
+@media (min-width: 40em) {
+	#nt-folders {
+		align-items: center;
+	}
+	.nt-folders-sheet {
+		border-radius: var(--radius, 12px);
+	}
+}
+.nt-folders-sheet h2 {
+	font-size: 1.15em;
+	margin: 0 0 0.2em;
+}
+.nt-folders-sheet .btn {
+	width: 100%;
+	justify-content: flex-start;
+	min-height: 2.9em;
+	text-align: left;
+}
+.nt-folders-sheet .btn small {
+	display: block;
+	color: var(--muted, #9aa8bd);
+	font-weight: 400;
+	word-break: break-all;
+}

@@ -239,7 +239,7 @@
 				el(
 					'li',
 					{},
-					icon(/\.zip/i.test(ref) ? 'i-zip' : 'i-file'),
+					icon(ref.includes('/ · ') ? 'i-folder' : /\.zip/i.test(ref) ? 'i-zip' : 'i-file'),
 					el('span', { class: 'path' }, label(ref)),
 					el('button', { type: 'button', class: 'btn btn-icon btn-quiet', 'aria-label': `Remove ${label(ref)}`, onclick: () => removeSource(ref) }, icon('i-x'))
 				)
@@ -364,6 +364,7 @@
 	}
 
 	function wireBuild() {
+		$('#pick-folder').addEventListener('click', async () => addSources(await api.pickFolders()));
 		$('#pick-zip').addEventListener('click', async () => addSources(await api.pickFiles({ filters: [{ name: 'Zip', extensions: ['zip'] }] })));
 		$('#pick-files').addEventListener('click', async () => addSources(await api.pickFiles({})));
 		$('#mode').addEventListener('change', (e) => (update({ mode: e.target.value }), renderBuild()));
@@ -436,6 +437,7 @@
 		wireFormats();
 		$$('.p-nav button').forEach((b) => b.addEventListener('click', () => show(b.dataset.page)));
 		$$('.p-preset').forEach(renderPreset);
+		if (window.nestweeMobile) window.nestweeMobile.renderFolderSettings($('#folder-settings'), { toast: (m, k) => toast(m, k) });
 		await loadFormats();
 		renderBuild();
 		renderA11y();

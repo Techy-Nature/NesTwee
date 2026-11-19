@@ -16,3 +16,15 @@
 .nt-tablet .main {
 	-webkit-overflow-scrolling: touch;
 }
+
+/* Folder permissions card on the Accessibility page. */
+.nt-folder-card {
+	margin-top: 1em;
+	display: flex;
+	flex-direction: column;
+	gap: 0.6em;
+	align-items: flex-start;
+}
+.nt-folder-card .path-list {
+	align-self: stretch;
+}

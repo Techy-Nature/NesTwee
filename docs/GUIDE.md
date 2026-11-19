@@ -227,13 +227,28 @@ The apps aren't on the Play Store, so you install the .apk file yourself ("sidel
 
 **Updating:** install the new .apk over the old one. If Android says **"App not installed"** or that the package conflicts, uninstall the old version first. (Each build is signed with a temporary key, so Android sometimes can't tell it's the same app.) Uninstalling also removes your presets and imported formats, so note down any presets you want to keep.
 
+### Give NesTwee permission to your story folders
+
+Android doesn't let apps read your folders until you say so. You only need to do this once per folder.
+
+1. Open the **Accessibility** tab (phone) or the **Accessibility** page (tablet).
+2. Scroll to **Folder permissions** and tap **Give folder permission…**.
+3. Android's folder picker opens. Go to the folder that holds your story (for example *Documents/Stories/my-story*) and tap **Use this folder**, then **Allow**.
+4. The folder now appears in the list. NesTwee can read it and everything inside it, every time you build.
+
+To take permission away, tap **Remove** next to the folder. (You can also skip this section: tapping **Add folder** on the Build page asks for permission the same way.)
+
+> Android won't give permission for the very top of your storage or for the Download folder itself. Put your story in a folder inside them, such as *Documents/Stories*.
+
 ### Build a story on a phone
 
-1. On your computer (or in your phone's Files app), make a **.zip** of your story folder. On Android, most Files apps can do this: long-press the folder and look for **Compress** or **Zip**.
-2. In NesTwee, on the **Build** tab, tap **Pick .zip** and choose it. You can also tap **Pick files** to choose `.twee`, `.tw`, `.html`, `.css` and `.js` files directly.
-3. Under **What to make**, pick *Playable story*, *Proofing copy*, *Twine 2 archive* or *Twee source*.
-4. Tap **Build** at the bottom.
-5. Tap **Preview** to play the story inside the app, or **Share** to send the file to Drive, email, Discord and so on.
+1. On the **Build** tab, tap **Add folder**. Pick one of the folders you gave permission to, or **Choose another folder…**.
+   - Or tap **Pick .zip** to use a zip of your story folder, or **Pick files** to choose `.twee`, `.tw`, `.html`, `.css` and `.js` files directly.
+2. Under **What to make**, pick *Playable story*, *Proofing copy*, *Twine 2 archive* or *Twee source*.
+3. Tap **Build** at the bottom.
+4. Tap **Preview** to play the story inside the app, or **Share** to send the file to Drive, email, Discord and so on.
+
+Folders are read fresh on every build, so after editing your story in another app, just tap **Build** again. A .zip or picked files are a snapshot: pick them again after changes.
 
 Built stories are saved in **Documents/NesTwee** on your device. On Android 10 and older the app asks once for storage permission. If you say no, the file is kept inside the app and **Share** is the way to get it out.
 
@@ -243,7 +258,8 @@ The tablet app works like the desktop one (see sections 2 to 8), with these diff
 
 | Desktop | Tablet |
 | --- | --- |
-| **Add folders…** | **Add .zip…** (a zip of the folder; its subfolders are searched too) |
+| **Add folders…** | **Add folder…** (one folder at a time, from the folders you gave permission to or Android's folder picker) |
+| **Add files…** | **Add files or .zip…** (a .zip counts as a whole folder) |
 | **Open output** | **Preview** (plays the story in the app) |
 | **Show in folder** | **Share** |
 | Output file anywhere | Always saved in **Documents/NesTwee** under the name you give |
@@ -258,6 +274,8 @@ All the built-in formats (SugarCube, Harlowe, Chapbook, Snowman, Duplex and Pape
 | Problem | What to do |
 | --- | --- |
 | "App not installed" | Uninstall the older NesTwee first, then install again. |
+| "NesTwee no longer has permission for this folder" | Give permission again in **Accessibility → Folder permissions**, or remove the folder from your sources and add it again. This happens if the folder was moved, renamed or deleted. |
+| The folder picker says "Can't use this folder" | Android blocks the top of your storage and the Download folder. Pick a folder inside them instead. |
 | The summary shows no Twee files | Make sure the zip holds `.twee` or `.tw` files (any subfolder is fine). If they're in a folder whose name starts with a dot, turn off **Skip hidden files**. |
 | A story doesn't play right in Preview | Tap **Share** and open the file in Chrome to play it as a normal web page. |
 | Text is too small or too big | Use the Accessibility tab. Text size goes from 80% to 200%. |

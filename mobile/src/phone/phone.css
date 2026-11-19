@@ -219,3 +219,12 @@ input[type='range'] {
 	bottom: 9em;
 	max-width: none;
 }
+
+#folder-settings {
+	display: flex;
+	flex-direction: column;
+	gap: 0.6em;
+}
+#folder-settings .nt-grant {
+	width: 100%;
+}

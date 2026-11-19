@@ -8,13 +8,15 @@
 */
 
 import { unzipSync } from 'fflate';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import engine from './engine-web.js';
 
 const VERSION = typeof __NESTWEE_VERSION__ !== 'undefined' ? __NESTWEE_VERSION__ : '0.0.0';
 const native = Capacitor.isNativePlatform();
+// NesTwee's own Android plugin (android/app/src/main/java/.../FolderAccessPlugin.java).
+const FolderAccess = registerPlugin('FolderAccess');
 
 // ------------------------------------------------------------ IndexedDB
 
@@ -50,9 +52,11 @@ const idbDelete = (store, key) => idb(store, 'readwrite', (s) => s.delete(key));
 // ------------------------------------------------------------ picked files ("library")
 
 /*
-	Android can't hand an app a whole folder, so a "source" is a set of files:
-	everything inside a picked .zip, or a group of picked files. Each set is
-	shown in the interface with a reference like "hello-hawk.zip · 3 files".
+	A "source" is one of:
+	- a folder the person gave NesTwee permission for (read fresh on every
+	  build, so edits are picked up), shown like "hello-hawk/ · folder";
+	- everything inside a picked .zip, shown like "hello-hawk.zip · 3 files";
+	- a group of picked files.
 */
 const library = new Map();
 let libraryLoaded = null;
@@ -92,17 +96,11 @@ async function readPicked(fileList) {
 	if (loose.length === 1) groups.push({ label: loose[0].path, kind: 'file', files: loose });
 	else if (loose.length > 1) groups.push({ label: `${loose.length} picked files`, kind: 'files', files: loose });
 
-	const refs = [];
-	for (const g of groups) {
-		const id = Math.random().toString(36).slice(2, 8);
+	return groups.map((g) => {
 		const count = g.files.length;
-		const ref = g.kind === 'file' ? `${g.label} #${id}` : `${g.label} · ${count} file${count === 1 ? '' : 's'} #${id}`;
-		const item = { ref, ...g, added: Date.now() };
-		library.set(ref, item);
-		idbPut('library', { id: ref, ...item }).catch(() => {});
-		refs.push(ref);
-	}
-	return refs;
+		const label = g.kind === 'file' ? g.label : `${g.label} · ${count} file${count === 1 ? '' : 's'}`;
+		return addLibraryItem(label, g.kind, { files: g.files });
+	});
 }
 
 function pickWithInput({ multiple = true, accept = '' } = {}) {
@@ -138,12 +136,147 @@ function acceptFromFilters(filters) {
 	return [...exts.map((e) => '.' + e), '.zip'].join(',');
 }
 
-async function resolveRefs(refs) {
+function addLibraryItem(label, kind, extra) {
+	const id = Math.random().toString(36).slice(2, 8);
+	const ref = `${label} #${id}`;
+	const item = { ref, label, kind, ...extra, added: Date.now() };
+	library.set(ref, item);
+	idbPut('library', { id: ref, ...item }).catch(() => {});
+	return ref;
+}
+
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+/**
+ * Asks which folder to add when some folders already have permission.
+ * Resolves to one of those folders, 'pick' for Android's folder picker, or null.
+ */
+function chooseGrantedFolder(folders) {
+	return new Promise((resolve) => {
+		const back = document.activeElement;
+		const wrap = document.createElement('div');
+		wrap.id = 'nt-folders';
+		wrap.setAttribute('role', 'dialog');
+		wrap.setAttribute('aria-modal', 'true');
+		wrap.setAttribute('aria-labelledby', 'nt-folders-title');
+		wrap.innerHTML =
+			'<div class="nt-folders-sheet"><h2 id="nt-folders-title">Add a folder</h2>' +
+			folders
+				.map((f, i) => `<button type="button" class="btn" data-i="${i}"><span>${esc(f.name)}<small>${esc(f.place)}</small></span></button>`)
+				.join('') +
+			'<button type="button" class="btn btn-primary" data-pick>Choose another folder…</button>' +
+			'<button type="button" class="btn btn-quiet" data-cancel>Cancel</button></div>';
+		const done = (value) => {
+			wrap.remove();
+			document.removeEventListener('keydown', onKey, true);
+			if (back && back.focus) back.focus();
+			resolve(value);
+		};
+		const onKey = (e) => {
+			if (e.key === 'Escape') done(null);
+		};
+		wrap.addEventListener('click', (e) => {
+			if (e.target === wrap) return done(null);
+			const b = e.target.closest('button');
+			if (!b) return;
+			if (b.hasAttribute('data-cancel')) done(null);
+			else if (b.hasAttribute('data-pick')) done('pick');
+			else done(folders[+b.dataset.i]);
+		});
+		document.addEventListener('keydown', onKey, true);
+		document.body.append(wrap);
+		wrap.querySelector('button').focus();
+	});
+}
+
+const folderRef = (f) => addLibraryItem(`${f.name}/ · folder`, 'folder', { uri: f.uri, place: f.place || f.name, files: [] });
+
+/** Adds a folder source: one that already has permission, or a new one from Android's picker. */
+async function pickNativeFolder() {
+	let granted = [];
+	try {
+		granted = ((await FolderAccess.list()).folders || []).filter((f) => f.available !== false);
+	} catch {
+		/* ignore */
+	}
+	if (granted.length) {
+		const choice = await chooseGrantedFolder(granted);
+		if (!choice) return null;
+		if (choice !== 'pick') return folderRef(choice);
+	}
+	const r = await FolderAccess.pick();
+	if (!r || r.cancelled || !r.uri) return null;
+	return folderRef(r);
+}
+
+/** Folder picking in an ordinary browser (for trying the interface on a computer). */
+function pickBrowserFolder() {
+	return new Promise((resolve) => {
+		const input = document.createElement('input');
+		input.type = 'file';
+		input.webkitdirectory = true;
+		input.style.display = 'none';
+		document.body.append(input);
+		input.addEventListener('change', async () => {
+			const list = [...(input.files || [])];
+			input.remove();
+			if (!list.length) return resolve([]);
+			const files = await Promise.all(
+				list.map(async (f) => ({ path: f.webkitRelativePath || f.name, bytes: new Uint8Array(await f.arrayBuffer()) }))
+			);
+			const top = (files[0].path.split('/')[0] || 'folder');
+			resolve([addLibraryItem(`${top}/ · ${files.length} files`, 'zip', { files: stripCommonFolder(files) })]);
+		});
+		input.addEventListener('cancel', () => {
+			input.remove();
+			resolve([]);
+		});
+		input.click();
+	});
+}
+
+function base64ToBytes(b64) {
+	const bin = atob(b64);
+	const out = new Uint8Array(bin.length);
+	for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+	return out;
+}
+
+/** Lists a granted folder: [{ path, id, size }]. */
+async function listFolder(item) {
+	const r = await FolderAccess.listTree({ uri: item.uri });
+	return r.files || [];
+}
+
+/** Reads the story files in a granted folder (only the kinds NesTwee uses). */
+async function readFolder(item, { skipHidden = false } = {}) {
+	const listed = (await listFolder(item)).filter(
+		(f) => engine.fileKind(f.path) && !(skipHidden && f.path.split('/').some((s) => s.startsWith('.')))
+	);
+	const files = [];
+	// Read in batches so one huge folder doesn't stall the bridge.
+	for (let i = 0; i < listed.length; i += 40) {
+		const batch = listed.slice(i, i + 40);
+		const r = await FolderAccess.readFiles({ uri: item.uri, ids: batch.map((f) => f.id) });
+		const byId = new Map((r.files || []).map((f) => [f.id, f.data]));
+		for (const f of batch) if (byId.has(f.id)) files.push({ path: f.path, bytes: base64ToBytes(byId.get(f.id)) });
+	}
+	return files;
+}
+
+async function resolveRefs(refs, opts = {}) {
 	await loadLibrary();
 	const files = [];
 	for (const r of refs || []) {
 		const item = library.get(r);
-		if (item) files.push(...item.files);
+		if (!item) continue;
+		if (item.kind === 'folder') {
+			try {
+				files.push(...(await readFolder(item, opts)));
+			} catch (err) {
+				throw new Error(`${item.label.replace(/ · folder$/, '')}: ${err.message || err}`);
+			}
+		} else files.push(...item.files);
 	}
 	return files;
 }
@@ -297,8 +430,14 @@ const api = {
 		};
 	},
 
-	// Folders can't be picked on Android, so both of these take files or .zip files.
-	pickFolders: () => pickWithInput({ multiple: true, accept: '.zip,application/zip' }),
+	// Folders come from Android's folder picker (which grants permission);
+	// .zip files can be picked through pickFiles or pickZips.
+	async pickFolders() {
+		if (!native) return pickBrowserFolder();
+		const ref = await pickNativeFolder();
+		return ref ? [ref] : [];
+	},
+	pickZips: () => pickWithInput({ multiple: true, accept: '.zip,application/zip' }),
 	pickFiles: (opts = {}) => pickWithInput({ multiple: opts.multiple !== false, accept: acceptFromFilters(opts.filters) }),
 	async pickSave(opts = {}) {
 		const ext = opts.filters && opts.filters[0] && opts.filters[0].extensions ? opts.filters[0].extensions[0] : 'html';
@@ -308,7 +447,22 @@ const api = {
 	},
 
 	async scan(refs, opts = {}) {
-		const files = await resolveRefs(refs);
+		await loadLibrary();
+		const files = [];
+		const warnings = [];
+		for (const r of refs || []) {
+			const item = library.get(r);
+			if (!item) continue;
+			if (item.kind !== 'folder') {
+				files.push(...item.files);
+				continue;
+			}
+			try {
+				files.push(...(await listFolder(item)));
+			} catch (err) {
+				warnings.push(`${r}: ${err.message || err}`);
+			}
+		}
 		const counts = {};
 		const list = [];
 		let ignored = 0;
@@ -323,7 +477,7 @@ const api = {
 			list.push({ path: f.path, kind });
 		}
 		const missing = (refs || []).filter((r) => !library.has(r));
-		const warnings = missing.map((r) => `${r}: These files are no longer stored. Remove it and pick them again.`);
+		for (const r of missing) warnings.push(`${r}: These files are no longer stored. Remove it and pick them again.`);
 		return { files: list, counts, warnings, total: list.length, ignored };
 	},
 
@@ -376,11 +530,17 @@ const api = {
 
 	async build(config) {
 		const started = Date.now();
-		const sources = await resolveRefs(config.sources);
-		const modules = await resolveRefs(config.modules);
-		const [head] = config.headFile ? await resolveRefs([config.headFile]) : [];
+		let sources, modules, head;
+		try {
+			const opts = { skipHidden: !!config.skipHidden };
+			sources = await resolveRefs(config.sources, opts);
+			modules = await resolveRefs(config.modules, opts);
+			[head] = config.headFile ? await resolveRefs([config.headFile]) : [];
+		} catch (err) {
+			return { ok: false, log: [{ level: 'error', message: err.message || String(err), time: Date.now() }] };
+		}
 		if (!sources.length) {
-			return { ok: false, log: [{ level: 'error', message: 'No story files were chosen. Add a .zip of your project or pick its files.', time: Date.now() }] };
+			return { ok: false, log: [{ level: 'error', message: 'No story files were chosen. Add your story folder, a .zip of it, or its files.', time: Date.now() }] };
 		}
 		const res = engine.build({
 			sources,
@@ -422,6 +582,27 @@ const api = {
 	shareOutput: async (p) => shareOutput(p),
 	previewOutput: async (p) => previewOutput(p),
 	forgetSource: async (ref) => forgetRef(ref),
+
+	/** Folder permissions, managed from the Accessibility settings. */
+	folderAccess: {
+		available: native,
+		async list() {
+			if (!native) return [];
+			const r = await FolderAccess.list().catch(() => ({ folders: [] }));
+			return r.folders || [];
+		},
+		async grant() {
+			if (!native) return null;
+			const r = await FolderAccess.pick();
+			return r && !r.cancelled ? r : null;
+		},
+		async release(uri) {
+			if (!native) return;
+			await FolderAccess.release({ uri }).catch(() => {});
+			// Sources that used this folder can't be read any more.
+			for (const [ref, item] of library) if (item.kind === 'folder' && item.uri === uri) forgetRef(ref);
+		},
+	},
 	openExternal: async (url) => {
 		if (/^https?:\/\//.test(url)) window.open(url, '_blank', 'noopener');
 	},
@@ -434,5 +615,68 @@ const api = {
 	},
 };
 
+// ------------------------------------------------------------ folder permissions card
+
+/**
+ * Fills `box` with the "Folder permissions" settings: a button that asks
+ * Android for permission to a folder, and the folders that have it.
+ * Used by the Accessibility settings in both the phone and tablet apps.
+ */
+function renderFolderSettings(box, { toast = () => {} } = {}) {
+	const fa = api.folderAccess;
+	box.innerHTML = '';
+	const h = document.createElement('h3');
+	h.textContent = 'Folder permissions';
+	const p = document.createElement('p');
+	p.className = 'small muted';
+	p.textContent = fa.available
+		? 'Give NesTwee permission to open your story folders. Android shows its folder picker: pick the folder that holds your story. NesTwee can then read it and its subfolders every time you build, so your latest edits are always used. Folders listed here appear when you tap Add folder.'
+		: 'Folder permissions are part of the Android app. In a browser, Add folder asks for a folder each time.';
+	const grantBtn = document.createElement('button');
+	grantBtn.type = 'button';
+	grantBtn.className = 'btn btn-primary nt-grant';
+	grantBtn.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg>Give folder permission…';
+	grantBtn.hidden = !fa.available;
+	const list = document.createElement('ul');
+	list.className = 'path-list nt-granted';
+	list.dataset.empty = 'No folders have permission yet.';
+	list.setAttribute('aria-label', 'Folders NesTwee has permission for');
+	box.append(h, p, grantBtn, list);
+
+	const refresh = async () => {
+		const folders = await fa.list();
+		list.replaceChildren(
+			...folders.map((f) => {
+				const li = document.createElement('li');
+				li.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg>';
+				const span = document.createElement('span');
+				span.className = 'path';
+				span.title = f.place;
+				span.textContent = f.available === false ? `${f.place} (not found)` : f.place;
+				const revoke = document.createElement('button');
+				revoke.type = 'button';
+				revoke.className = 'btn btn-quiet';
+				revoke.textContent = 'Remove';
+				revoke.setAttribute('aria-label', `Remove permission for ${f.name}`);
+				revoke.addEventListener('click', async () => {
+					await fa.release(f.uri);
+					toast(`NesTwee no longer has permission for ${f.name}.`);
+					refresh();
+				});
+				li.append(span, revoke);
+				return li;
+			})
+		);
+	};
+	grantBtn.addEventListener('click', async () => {
+		const f = await fa.grant();
+		if (f) toast(`NesTwee can now open ${f.name}.`, 'success');
+		refresh();
+	});
+	refresh();
+	return refresh;
+}
+
 window.nestwee = api;
+window.nestweeMobile = { renderFolderSettings };
 loadLibrary();
