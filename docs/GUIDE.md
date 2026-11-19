@@ -227,7 +227,7 @@ The apps aren't on the Play Store, so you install the .apk file yourself ("sidel
 4. Tap **Install**. If Play Protect warns that it doesn't recognise the app, tap **More details → Install anyway**.
 5. Open **NesTwee** (or **NesTwee Tablet**) from your app drawer.
 
-**Updating:** install the new .apk over the old one. If Android says **"App not installed"** or that the package conflicts, uninstall the old version first. (Each build is signed with a temporary key, so Android sometimes can't tell it's the same app.) Uninstalling also removes your presets and imported formats, so note down any presets you want to keep.
+**Updating:** install the new .apk over the old one. If Android says **"App not installed"** or that the package conflicts, uninstall the old version first. (This only happens with builds made before the repository had its signing key set up; see *Signing key* below.) Uninstalling also removes your presets and imported formats, so note down any presets you want to keep.
 
 ### Give NesTwee permission to your story folders
 
@@ -301,3 +301,16 @@ All the built-in formats (SugarCube, Harlowe, Chapbook, Snowman, Duplex and Pape
 | A story doesn't play right in Preview | Tap **Share** and open the file in Chrome to play it as a normal web page. |
 | Text is too small or too big | Use the Accessibility tab. Text size goes from 80% to 200%. |
 
+
+### Signing key (for whoever runs the GitHub repository)
+
+Android only installs an update over an existing app if both were signed with the same key. GitHub builds the APKs, so the key lives in the repository's private **Secrets**:
+
+1. On GitHub, open the repository → **Settings → Secrets and variables → Actions → New repository secret**.
+2. Name: `ANDROID_KEYSTORE_BASE64`. Value: the whole contents of the key file encoded as base64 (one long line). Press **Add secret**.
+3. Add a second secret named `ANDROID_KEYSTORE_PASSWORD` with the key's password.
+4. Re-run the latest **Build apps** run (or merge anything). From then on every APK is signed with that key, and new versions install over old ones.
+
+Keep a private backup of the key file and password. If the key is lost, the next APK has to be installed by uninstalling the app first. Without the secrets (for example on a fork) the build still works, but uses a temporary key each time.
+
+To make a new key: `keytool -genkeypair -keystore nestwee-release.jks -storetype PKCS12 -alias nestwee -keyalg RSA -keysize 4096 -validity 36500`, then `base64 -w0 nestwee-release.jks` for the secret's value.

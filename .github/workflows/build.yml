@@ -101,6 +101,25 @@ jobs:
       - name: Run tests
         run: npm test
 
+      # With the ANDROID_KEYSTORE_BASE64 and ANDROID_KEYSTORE_PASSWORD secrets set,
+      # every APK is signed with the same key, so updates install over each other.
+      # Without them (for example on a fork), a temporary debug key is used.
+      - name: Load the signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ] && [ -n "$KEYSTORE_PASSWORD" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/nestwee.jks"
+            echo "NESTWEE_KEYSTORE=$RUNNER_TEMP/nestwee.jks" >> "$GITHUB_ENV"
+            echo "NESTWEE_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+            echo "BUILD_TYPE=Release" >> "$GITHUB_ENV"
+            echo "Signing with the NesTwee key."
+          else
+            echo "BUILD_TYPE=Debug" >> "$GITHUB_ENV"
+            echo "::warning::No signing key secrets found, so the APKs use a temporary debug key and won't install over earlier builds."
+          fi
+
       - name: Build the phone and tablet apps
         run: |
           VERSION=$(node -p "require('./package.json').version")
@@ -109,13 +128,17 @@ jobs:
           for VARIANT in phone tablet; do
             node mobile/build.mjs "$VARIANT"
             npx cap sync android
-            (cd android && ./gradlew --no-daemon clean assembleDebug \
+            (cd android && ./gradlew --no-daemon clean "assemble$BUILD_TYPE" \
               -PnestweeVariant="$VARIANT" \
               -PnestweeVersion="$VERSION" \
               -PnestweeVersionCode="${{ github.run_number }}")
             NAME=NesTwee
             [ "$VARIANT" = tablet ] && NAME=NesTwee-Tablet
-            cp android/app/build/outputs/apk/debug/app-debug.apk "dist/$NAME-$VERSION-android.apk"
+            if [ "$BUILD_TYPE" = Release ]; then
+              cp android/app/build/outputs/apk/release/app-release.apk "dist/$NAME-$VERSION-android.apk"
+            else
+              cp android/app/build/outputs/apk/debug/app-debug.apk "dist/$NAME-$VERSION-android.apk"
+            fi
           done
           ls -l dist
 
