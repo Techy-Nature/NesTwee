@@ -38,6 +38,7 @@ import org.json.JSONArray;
 public class FolderAccessPlugin extends Plugin {
 
     private static final int MAX_FILES = 20000;
+    private static final java.util.Set<String> SKIP_DIRS = new java.util.HashSet<>(java.util.Arrays.asList(".git", "node_modules"));
     private static final int FLAGS = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
 
     /** Opens Android's folder picker and keeps permission for the folder chosen. */
@@ -146,6 +147,9 @@ public class FolderAccessPlugin extends Plugin {
                         long modified = c.isNull(4) ? 0 : c.getLong(4);
                         String path = dir[1] + name;
                         if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mime)) {
+                            // Git's own data and installed packages never hold story files,
+                            // and can be huge, so don't walk them.
+                            if (SKIP_DIRS.contains(name)) continue;
                             stack.push(new String[] { id, path + "/" });
                         } else {
                             JSObject f = new JSObject();
