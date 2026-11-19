@@ -102,7 +102,27 @@ Open **Modules, head file & advanced options** on the Build page.
 
 The **Story formats** page lists every format NesTwee can use, with its version and where it lives.
 
-NesTwee comes with SugarCube 2, Harlowe 3, Chapbook 1, Snowman 2 and Paperthin 1. To use another format or a newer version:
+NesTwee comes with SugarCube 2, Harlowe 3, Chapbook 1, Snowman 2, Duplex 1 and Paperthin 1 (a proofing format). You're not limited to those or to the built-in presets.
+
+### Import a single format (easiest)
+
+1. Download the format you want. You need its `format.js` file (story formats, proofing formats and editing formats all come as a `format.js`).
+2. On the **Story formats** page press **Import format.js…** (the Build page has an **Import a format…** button too) and choose the file.
+3. NesTwee copies it into its own formats folder, names it after the format and its major version (for example `dotgraph-2`), and lists it straight away, marked as **Story** or **Proofing**. A license or icon file next to it is copied too.
+4. Importing a newer version of a format that NesTwee already has (for example SugarCube 2.38) replaces the built-in one, because imported formats win over bundled ones.
+5. **Remove** next to an imported format deletes it again; the bundled one comes back.
+
+### Make a proofing copy
+
+A proofing format turns your story into something to read and check rather than play (for example Paperthin prints every passage in order).
+
+1. On the Build page choose **Proofing copy** under *What to make*.
+2. Pick the proofing format in the **Proofing format** menu. Only proofing formats are listed there.
+3. Choose an output file (it's suggested as `proof.html`) and press **Build**.
+
+You can also pick a proofing format directly in the normal **Format** menu, where formats are grouped into *Story formats* and *Proofing formats*.
+
+### Use a whole folder of formats
 
 1. Make a folder for formats, for example `Documents/storyformats`.
 2. Inside it, make one folder per format, such as `sugarcube-2.38`, and put the format's `format.js` in it (Twine 2 style). Twine 1 style formats use a `header.html` instead.
@@ -148,11 +168,13 @@ Both the Build page and the Accessibility page have a presets bar at the top.
 
 From the `Nestwee` folder:
 
+The easiest way to get Windows and Mac apps is to let GitHub build them; see [Making an installer](../README.md#making-an-installer) in the README. To build on your own computer:
+
 | Command | Makes |
 | --- | --- |
 | `npm run dist` | An installer for the system you're on |
 | `npm run dist:win` | Windows installer and a portable `.exe` |
-| `npm run dist:mac` | macOS `.dmg` (run this on a Mac) |
+| `npm run dist:mac` | macOS `.dmg` (Apple only allows this on a Mac, which is why GitHub's Mac machines are handy) |
 | `npm run dist:linux` | Linux AppImage and `.deb` |
 
 The results go in `dist/`. Unsigned macOS and Windows builds will show a security prompt the first time they're opened; that's normal for apps that aren't code-signed.

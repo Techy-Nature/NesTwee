@@ -64,8 +64,39 @@ function getStoryFormatData(id, source) {
 				}
 			}
 		}
+		// Formats such as Duplex wrap their JSON in Object.assign({...}, {...code});
+		// fall back to the first balanced JSON object in the file.
+		const balanced = firstBalancedObject(source, first);
+		if (balanced) {
+			try {
+				return JSON.parse(balanced);
+			} catch {
+				/* fall through */
+			}
+		}
 		throw new Error('Could not decode story format JSON chunk.');
 	}
+}
+
+/** Return the first `{…}` block starting at `start`, honouring JSON strings. */
+function firstBalancedObject(text, start) {
+	let depth = 0;
+	let inString = false;
+	for (let i = start; i < text.length; i++) {
+		const c = text[i];
+		if (inString) {
+			if (c === '\\') i++;
+			else if (c === '"') inString = false;
+			continue;
+		}
+		if (c === '"') inString = true;
+		else if (c === '{') depth++;
+		else if (c === '}') {
+			depth--;
+			if (depth === 0) return text.slice(start, i + 1);
+		}
+	}
+	return null;
 }
 
 class StoryFormat {

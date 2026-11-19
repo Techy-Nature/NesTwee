@@ -35,6 +35,7 @@
 		outFile: '',
 		mode: 'html',
 		format: '',
+		proofFormat: '',
 		start: '',
 		test: false,
 		modules: [],
@@ -51,8 +52,9 @@
 		'SugarCube 2': { format: 'sugarcube-2' },
 		'Harlowe 3': { format: 'harlowe-3' },
 		'Chapbook 1': { format: 'chapbook-1' },
+		'Duplex 1': { format: 'duplex-1' },
 		'Test build (debug on)': { test: true, logStats: true, logFiles: true },
-		'Proofing copy (Paperthin)': { format: 'paperthin-1' },
+		'Proofing copy (Paperthin)': { mode: 'proof', proofFormat: 'paperthin-1' },
 	};
 
 	const PATH_KEYS = ['sources', 'outFile', 'modules', 'headFile'];
@@ -439,16 +441,45 @@
 		);
 	}
 
-	function renderFormatSelect(select, value) {
-		select.replaceChildren(el('option', { value: '' }, 'Automatic (StoryData or SugarCube 2)'));
-		for (const f of state.formats) {
-			const label = f.twine2 ? `${f.name} ${f.version}${f.proofing ? ' (proofing)' : ''}` : `${f.id} (Twine 1)`;
-			select.append(el('option', { value: f.id }, `${label} — ${f.id}`));
+	function formatLabel(f) {
+		return f.twine2 ? `${f.name} ${f.version} — ${f.id}` : `${f.id} (Twine 1)`;
+	}
+
+	function renderFormatSelect(select, value, { proofing = false } = {}) {
+		const story = state.formats.filter((f) => !f.proofing);
+		const proof = state.formats.filter((f) => f.proofing);
+		select.replaceChildren();
+		if (proofing) {
+			if (!proof.length) select.append(el('option', { value: '' }, 'No proofing formats found. Import one.'));
+			for (const f of proof) select.append(el('option', { value: f.id }, formatLabel(f)));
+		} else {
+			select.append(el('option', { value: '' }, 'Automatic (StoryData or SugarCube 2)'));
+			if (story.length) select.append(el('optgroup', { label: 'Story formats' }, story.map((f) => el('option', { value: f.id }, formatLabel(f)))));
+			if (proof.length) select.append(el('optgroup', { label: 'Proofing formats' }, proof.map((f) => el('option', { value: f.id }, formatLabel(f)))));
 		}
 		if (value && !state.formats.some((f) => f.id === value)) {
 			select.append(el('option', { value }, `${value} (not found)`));
 		}
-		select.value = value || '';
+		select.value = value || (proofing && proof[0] ? proof[0].id : '');
+	}
+
+	async function importFormat() {
+		const [file] = await api.pickFiles({
+			title: 'Choose a story format (format.js)',
+			multiple: false,
+			filters: [{ name: 'Twine 2 story format', extensions: ['js'] }, { name: 'All files', extensions: ['*'] }],
+		});
+		if (!file) return;
+		const res = await api.importFormat(file);
+		if (!res.ok) {
+			logEntry({ level: 'error', message: `Import failed: ${res.error}` });
+			toast(`That file couldn't be imported: ${res.error}`, 'error', 7000);
+			return;
+		}
+		await loadFormats();
+		const kind = res.proofing ? 'proofing format' : 'story format';
+		logEntry({ level: 'success', message: `Imported ${res.name} ${res.version} as ${kind} “${res.id}”.` });
+		toast(`Imported ${res.name} ${res.version} (${res.id}).`, 'success');
 	}
 
 	function renderBuildForm() {
@@ -467,7 +498,11 @@
 		$('#build-skip-hidden').checked = b.skipHidden;
 		$('#build-log-files').checked = b.logFiles;
 		$('#build-log-stats').checked = b.logStats;
-		$('#build-format').disabled = b.mode !== 'html';
+		renderFormatSelect($('#build-proof-format'), b.proofFormat, { proofing: true });
+		const compiled = b.mode === 'html' || b.mode === 'proof';
+		$('#build-format-field').hidden = b.mode === 'proof';
+		$('#build-proof-field').hidden = b.mode !== 'proof';
+		$('#build-format').disabled = !compiled;
 		$('#build-test').disabled = b.mode !== 'html';
 	}
 
@@ -548,7 +583,7 @@
 		const first = state.build.sources[0];
 		if (!first) return undefined;
 		const base = /\.[a-z0-9]+$/i.test(first) ? dirname(first) : first;
-		const name = state.build.mode === 'html' ? 'index.html' : 'archive.html';
+		const name = { html: 'index.html', proof: 'proof.html' }[state.build.mode] || 'archive.html';
 		return joinPath(dirname(base) || base, name);
 	}
 
@@ -566,7 +601,15 @@
 	}
 
 	function buildConfig() {
-		return { ...state.build, formatDirs: state.formatDirs };
+		const cfg = { ...state.build, formatDirs: state.formatDirs };
+		if (cfg.mode === 'proof') {
+			// A proofing copy is an HTML build that uses a proofing format.
+			cfg.mode = 'html';
+			cfg.format = cfg.proofFormat || $('#build-proof-format').value;
+			cfg.test = false;
+		}
+		delete cfg.proofFormat;
+		return cfg;
 	}
 
 	function showIFIDHelp(message) {
@@ -703,6 +746,8 @@
 		$('#build-out').addEventListener('change', (e) => updateBuild({ outFile: e.target.value.trim() }));
 		$('#build-out-browse').addEventListener('click', chooseBuildOutput);
 		$('#build-format').addEventListener('change', (e) => updateBuild({ format: e.target.value }));
+		$('#build-proof-format').addEventListener('change', (e) => updateBuild({ proofFormat: e.target.value }));
+		$('#build-import-format').addEventListener('click', importFormat);
 		$('#build-start').addEventListener('change', (e) => updateBuild({ start: e.target.value.trim() }));
 		$('#build-test').addEventListener('change', (e) => updateBuild({ test: e.target.checked }));
 		$('#build-head').addEventListener('change', (e) => updateBuild({ headFile: e.target.value.trim() }));
@@ -827,13 +872,20 @@
 					el('td', {}, f.twine2 ? f.name : f.id, f.proofing ? el('span', { class: 'badge' }, 'proofing') : null, f.id === 'sugarcube-2' ? el('span', { class: 'badge warm' }, 'default') : null),
 					el('td', {}, f.version || '—'),
 					el('td', {}, el('code', {}, f.id)),
-					el('td', {}, f.twine2 ? 'Twine 2' : 'Twine 1'),
-					el('td', { class: 'path-cell' }, dirname(f.filename))
+					el('td', {}, f.twine2 ? (f.proofing ? 'Proofing (Twine 2)' : 'Story (Twine 2)') : 'Story (Twine 1)'),
+					el('td', { class: 'path-cell' }, dirname(f.filename)),
+					el(
+						'td',
+						{},
+						res.importedDir && f.filename.startsWith(res.importedDir)
+							? el('button', { type: 'button', class: 'btn btn-quiet btn-sm', 'aria-label': `Remove imported format ${f.id}`, onclick: () => removeImported(f.id) }, icon('i-x'), 'Remove')
+							: null
+					)
 				)
 			)
 		);
 		if (!res.formats.length) {
-			tbody.append(el('tr', {}, el('td', { colspan: '5' }, 'No story formats were found. Add a folder below.')));
+			tbody.append(el('tr', {}, el('td', { colspan: '6' }, 'No story formats were found. Import one or add a folder below.')));
 		}
 		$('#formats-warnings').replaceChildren(...res.warnings.map((w) => el('div', { class: 'callout callout-warn small' }, icon('i-warn'), el('span', {}, w))));
 
@@ -846,14 +898,21 @@
 					icon('i-folder'),
 					el('span', { class: 'path', title: d.path }, el('bdi', {}, d.path)),
 					d.bundled ? el('span', { class: 'tag' }, 'bundled') : null,
-					!d.exists ? el('span', { class: 'tag' }, 'missing') : null,
+					d.imported ? el('span', { class: 'tag' }, 'imported') : null,
+					!d.exists && !d.imported ? el('span', { class: 'tag' }, 'missing') : null,
 					userDirs.has(d.path)
 						? el('button', { type: 'button', class: 'btn btn-icon btn-quiet', 'aria-label': `Remove ${d.path}`, onclick: () => removeFormatDir(d.path) }, icon('i-x'))
-						: el('span', { class: 'tag' }, d.bundled ? 'built in' : 'auto')
+						: el('span', { class: 'tag' }, d.bundled ? 'built in' : d.imported ? 'app' : 'auto')
 				)
 			)
 		);
-		renderFormatSelect($('#build-format'), state.build.format);
+		renderBuildForm();
+	}
+
+	async function removeImported(id) {
+		await api.removeImportedFormat(id);
+		await loadFormats();
+		toast(`Removed imported format “${id}”.`);
 	}
 
 	function removeFormatDir(p) {
@@ -863,6 +922,7 @@
 	}
 
 	function wireFormats() {
+		$('#formats-import').addEventListener('click', importFormat);
 		$('#formats-refresh').addEventListener('click', async () => {
 			await loadFormats();
 			toast(`Found ${state.formats.length} story formats.`);

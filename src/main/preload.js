@@ -21,6 +21,8 @@ contextBridge.exposeInMainWorld('nestwee', {
 
 	scan: (paths, opts) => ipcRenderer.invoke('files:scan', paths, opts),
 	listFormats: (extraDirs) => ipcRenderer.invoke('formats:list', extraDirs),
+	importFormat: (file) => ipcRenderer.invoke('formats:import', file),
+	removeImportedFormat: (id) => ipcRenderer.invoke('formats:removeImported', id),
 	charsets: () => ipcRenderer.invoke('engine:charsets'),
 	newIFID: () => ipcRenderer.invoke('engine:ifid'),
 

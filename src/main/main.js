@@ -8,6 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const { app, BrowserWindow, ipcMain, dialog, shell, clipboard, nativeTheme, Menu } = require('electron');
 const engine = require('../engine');
+const { getStoryFormatData } = require('../engine/formats');
 const { Store } = require('./store');
 const pkg = require('../../package.json');
 
@@ -22,9 +23,17 @@ function bundledFormatsDir() {
 	return path.join(ROOT, 'storyformats');
 }
 
-/** Bundled formats first, then Tweego's usual places, then the user's folders. */
+function importedFormatsDir() {
+	return path.join(app.getPath('userData'), 'storyformats');
+}
+
+/**
+ * Bundled formats first, then formats imported through the app, then Tweego's
+ * usual places, then the user's folders. Later folders win when two hold a
+ * format with the same ID, so imports and user folders can replace built-ins.
+ */
 function formatSearchDirs(extraDirs = []) {
-	const dirs = [bundledFormatsDir()];
+	const dirs = [bundledFormatsDir(), importedFormatsDir()];
 	const programDirs = [path.dirname(app.getPath('exe'))];
 	for (const d of engine.defaultSearchDirs({ programDirs, workingDir: null })) {
 		if (!dirs.includes(d)) dirs.push(d);
@@ -132,10 +141,40 @@ function registerIpc() {
 		const dirs = formatSearchDirs(extraDirs);
 		const map = engine.StoryFormatsMap.discover(dirs);
 		return {
-			searchDirs: dirs.map((d) => ({ path: d, exists: fs.existsSync(d), bundled: d === bundledFormatsDir() })),
+			searchDirs: dirs.map((d) => ({ path: d, exists: fs.existsSync(d), bundled: d === bundledFormatsDir(), imported: d === importedFormatsDir() })),
+			importedDir: importedFormatsDir(),
 			formats: map.list().map((f) => f.toJSON()),
 			warnings: map.warnings,
 		};
+	});
+
+	ipcMain.handle('formats:import', (_e, file) => {
+		try {
+			const source = fs.readFileSync(file, 'utf8');
+			const data = getStoryFormatData(path.basename(path.dirname(file)), source);
+			if (!data.name || !data.version || typeof data.source !== 'string') {
+				throw new Error('This file has no name, version or source, so it is not a Twine 2 story format.');
+			}
+			const major = (String(data.version).match(/^\d+/) || ['1'])[0];
+			const id = `${String(data.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${major}`;
+			const dest = path.join(importedFormatsDir(), id);
+			fs.mkdirSync(dest, { recursive: true });
+			fs.copyFileSync(file, path.join(dest, 'format.js'));
+			for (const extra of fs.readdirSync(path.dirname(file))) {
+				if (/^(licen[cs]e|copying)(\..*)?$|^icon\.svg$|^logo\.svg$/i.test(extra)) {
+					fs.copyFileSync(path.join(path.dirname(file), extra), path.join(dest, extra));
+				}
+			}
+			return { ok: true, id, name: data.name, version: data.version, proofing: !!data.proofing, folder: dest };
+		} catch (err) {
+			return { ok: false, error: err.message };
+		}
+	});
+
+	ipcMain.handle('formats:removeImported', (_e, id) => {
+		const dest = path.join(importedFormatsDir(), path.basename(id));
+		fs.rmSync(dest, { recursive: true, force: true });
+		return { ok: true };
 	});
 
 	ipcMain.handle('engine:charsets', () => engine.supportedCharsets());

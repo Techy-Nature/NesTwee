@@ -93,6 +93,7 @@
 							<label><input type="radio" name="build-mode" value="html" checked><span>Playable HTML</span></label>
 							<label><input type="radio" name="build-mode" value="archive-twine2"><span>Twine 2 archive</span></label>
 							<label><input type="radio" name="build-mode" value="archive-twine1"><span>Twine 1 archive</span></label>
+							<label><input type="radio" name="build-mode" value="proof"><span>Proofing copy</span></label>
 						</fieldset>
 						<label class="field">
 							<span class="label">Output file</span>
@@ -104,9 +105,13 @@
 
 						<h3 class="mt">3. Story format</h3>
 						<div class="row wrap">
-							<label class="field grow">
+							<label class="field grow" id="build-format-field">
 								<span class="label">Format</span>
 								<select id="build-format"></select>
+							</label>
+							<label class="field grow" id="build-proof-field" hidden>
+								<span class="label">Proofing format</span>
+								<select id="build-proof-format"></select>
 							</label>
 							<label class="field grow">
 								<span class="label">Starting passage</span>
@@ -114,6 +119,7 @@
 							</label>
 						</div>
 						<p class="small muted" id="start-help">Leave the format and starting passage on automatic to use what your StoryData passage says (or SugarCube 2 and “Start”).</p>
+						<p class="small"><button type="button" class="btn btn-sm" id="build-import-format"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg>Import a format…</button> <span class="muted">Use any Twine 2 <code>format.js</code>, including proofing and editing formats.</span></p>
 						<label class="check"><input type="checkbox" id="build-test"><span>Test mode <span class="muted small">(turns on the format's debug tools)</span></span></label>
 					</div>
 				</div>
@@ -212,15 +218,18 @@
 				<div class="page-head">
 					<div>
 						<h2 id="formats-title">Story formats</h2>
-						<p class="muted">NesTwee ships with SugarCube, Harlowe, Chapbook, Snowman and Paperthin. Add folders to use other formats or newer versions.</p>
+						<p class="muted">NesTwee ships with SugarCube, Harlowe, Chapbook, Snowman, Duplex and Paperthin. Import any other <code>format.js</code>, or add folders of formats, to use other formats, proofing formats or newer versions.</p>
 					</div>
-					<button type="button" class="btn" id="formats-refresh"><svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>Rescan</button>
+					<div class="row wrap">
+						<button type="button" class="btn btn-primary" id="formats-import"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg>Import format.js…</button>
+						<button type="button" class="btn" id="formats-refresh"><svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>Rescan</button>
+					</div>
 				</div>
 				<div class="card">
 					<h3>Available formats</h3>
 					<div class="table-wrap">
 						<table class="table" id="formats-table">
-							<thead><tr><th scope="col">Name</th><th scope="col">Version</th><th scope="col">ID</th><th scope="col">Kind</th><th scope="col">Folder</th></tr></thead>
+							<thead><tr><th scope="col">Name</th><th scope="col">Version</th><th scope="col">ID</th><th scope="col">Kind</th><th scope="col">Folder</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
 							<tbody></tbody>
 						</table>
 					</div>
@@ -319,7 +328,7 @@
 					<div>
 						<h2 id="about-title">NesTwee <span class="muted" id="about-version"></span></h2>
 						<p>A desktop app that does everything <a href="https://github.com/tmedwards/tweego" target="_blank" rel="noopener">Tweego</a> does, with buttons instead of command-line flags: compile Twee to HTML, make Twine archives, decompile back to Twee, watch folders, add modules and head files.</p>
-						<p class="small muted">The compiler is a JavaScript port of Tweego by Thomas Michael Edwards (BSD 2-Clause). Bundled story formats keep their own licenses: SugarCube (BSD 2-Clause), Harlowe (Zlib), Chapbook (MIT), Snowman (MIT), Paperthin (Zlib). OpenDyslexic by Abbie Gonzalez is bundled under the SIL Open Font License 1.1.</p>
+						<p class="small muted">The compiler is a JavaScript port of Tweego by Thomas Michael Edwards (BSD 2-Clause). Bundled story formats keep their own licenses: SugarCube (BSD 2-Clause), Harlowe (Zlib), Chapbook (MIT), Snowman (MIT), Duplex (MIT), Paperthin (Zlib). OpenDyslexic by Abbie Gonzalez is bundled under the SIL Open Font License 1.1.</p>
 						<p class="small muted">Keyboard: <kbd>Ctrl</kbd>+<kbd>B</kbd> builds, <kbd>Ctrl</kbd>+<kbd>=</kbd> / <kbd>Ctrl</kbd>+<kbd>-</kbd> change text size.</p>
 					</div>
 				</div>

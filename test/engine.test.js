@@ -161,3 +161,19 @@ test('watch triggers a rebuild on change', async () => {
 	w.close();
 	assert.ok(changed >= 1);
 });
+
+test('formats wrapped in Object.assign (like Duplex) are discovered', () => {
+	const formats = engine.StoryFormatsMap.discover(FORMAT_DIRS);
+	const duplex = formats.getByID('duplex-1');
+	assert.ok(duplex);
+	assert.strictEqual(duplex.name, 'Duplex');
+	assert.strictEqual(duplex.version, '1.8.0');
+	assert.match(duplex.source(), /\{\{STORY_DATA\}\}/);
+});
+
+test('proofing formats compile like any other format', () => {
+	const dir = tmpProject({ 'story.twee': BASIC });
+	const out = path.join(dir, 'proof.html');
+	engine.build({ sources: [path.join(dir, 'src')], outFile: out, format: 'paperthin-1' }, { formatDirs: FORMAT_DIRS });
+	assert.match(fs.readFileSync(out, 'utf8'), /format="Paperthin"/);
+});

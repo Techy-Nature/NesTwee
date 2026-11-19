@@ -39,7 +39,8 @@ Extras that Tweego doesn't have:
 
 - **Presets** for build settings (format, start passage, options and, if you like, your folders) and for accessibility settings. A few built-in presets are included.
 - **A missing-IFID helper** that shows the `StoryData` snippet to paste, with copy buttons.
-- **Bundled story formats**: SugarCube 2.37.3, Harlowe 3.3.9, Chapbook 1.2.3, Snowman 2.0.2 and Paperthin 1.0.0, so it works straight away.
+- **Bundled story formats**: SugarCube 2.37.3, Harlowe 3.3.9, Chapbook 1.2.3, Snowman 2.0.2, Duplex 1.8.0 and Paperthin 1.0.0, so it works straight away.
+- **Any other format, including proofing formats**: **Import format.js…** copies any Twine 2 story or proofing format into NesTwee, and **Proofing copy** builds your story with a proofing format of your choice.
 - **A command-line twin**, `nestwee-cli`, that accepts Tweego's flags (handy for scripts and CI).
 
 ## Getting started (step by step)
@@ -69,10 +70,27 @@ For a deeper walkthrough (watch mode, modules, presets, adding story formats, bu
 
 ## Making an installer
 
+### The easy way: let GitHub build them
+
+The repository has a GitHub Actions workflow (`.github/workflows/build.yml`) that builds the Windows, macOS and Linux apps on GitHub's own Windows, Mac and Linux machines.
+
+1. Push to `main`, open a pull request, or start it by hand: **Actions** tab → **Build apps** → **Run workflow**.
+2. When it finishes (about 5–10 minutes), open the run and download **NesTwee-Windows**, **NesTwee-macOS** or **NesTwee-Linux** from the **Artifacts** section at the bottom.
+3. To publish a release, push a version tag, for example:
+   ```sh
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+   The apps are then attached to a GitHub Release automatically.
+
+The apps aren't code-signed yet, so Windows SmartScreen and macOS Gatekeeper will warn the first time they're opened (on a Mac: right-click the app → **Open**).
+
+### Building on your own computer
+
 ```sh
 npm run dist        # for the computer you're on
 npm run dist:win    # Windows installer + portable .exe
-npm run dist:mac    # macOS .dmg (must be run on a Mac)
+npm run dist:mac    # macOS .dmg (Apple only allows this on a Mac)
 npm run dist:linux  # AppImage + .deb
 ```
 
