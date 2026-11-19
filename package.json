@@ -1,0 +1,61 @@
+{
+  "name": "nestwee",
+  "productName": "NesTwee",
+  "version": "0.1.0",
+  "description": "A desktop GUI for compiling Twee and Twine stories, with everything Tweego does and friendlier controls.",
+  "main": "src/main/main.js",
+  "author": "Neston Linden Toftwyn",
+  "license": "BSD-2-Clause",
+  "homepage": "https://github.com/Techy-Nature/Nestwee",
+  "bin": {
+    "nestwee-cli": "src/cli.js"
+  },
+  "scripts": {
+    "start": "electron .",
+    "cli": "node src/cli.js",
+    "test": "node --test test/*.test.js",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "dependencies": {
+    "iconv-lite": "0.7.3",
+    "parse5": "8.0.1",
+    "semver": "7.8.5"
+  },
+  "devDependencies": {
+    "electron": "44.10.1",
+    "electron-builder": "26.18.1"
+  },
+  "build": {
+    "appId": "com.techynature.nestwee",
+    "productName": "NesTwee",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "storyformats",
+        "to": "storyformats"
+      }
+    ],
+    "icon": "assets/icon.png",
+    "win": {
+      "target": ["nsis", "portable"]
+    },
+    "mac": {
+      "target": ["dmg"],
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Development"
+    }
+  }
+}
