@@ -1,5 +1,4 @@
 /* Tablet build of the desktop interface. */
-.nt-tablet #watch-toggle,
 .nt-tablet #formatdirs-add,
 .nt-tablet #build-head-browse + .btn,
 .nt-tablet [data-page='formats'] .card:last-child p {

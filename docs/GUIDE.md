@@ -250,7 +250,25 @@ To take permission away, tap **Remove** next to the folder. (You can also skip t
 
 Folders are read fresh on every build, so after editing your story in another app, just tap **Build** again. A .zip or picked files are a snapshot: pick them again after changes.
 
-Built stories are saved in **Documents/NesTwee** on your device. On Android 10 and older the app asks once for storage permission. If you say no, the file is kept inside the app and **Share** is the way to get it out.
+Built stories are saved in **Documents/NesTwee** on your device unless you choose another folder (see *Choose where builds are saved* below). On Android 10 and older the app asks once for storage permission. If you say no, the file is kept inside the app and **Share** is the way to get it out.
+
+### Watch & rebuild on Android
+
+1. Add your story with **Add folder** (watch mode follows folders; a .zip or picked files never change).
+2. Tap **Watch** next to **Build** (phone) or **Watch & rebuild** (tablet). NesTwee builds once straight away.
+3. Edit your story in another app and save. Within a couple of seconds NesTwee notices and rebuilds. The bar above the buttons (phone) or the log (tablet) shows when it last built.
+4. Tap **Stop** (phone) or **Stop watching** (tablet) when you're done.
+
+Android pauses apps you aren't looking at, so NesTwee checks for changes as soon as you switch back to it.
+
+### Choose where builds are saved (export folder)
+
+By default, builds go to **Documents/NesTwee**. To save them somewhere else, such as next to your story or in a folder that syncs to your computer:
+
+- **Phone:** open **More options**, then pick a folder under **Save to**. Choose **Choose a folder…** to give permission to a new one.
+- **Tablet:** press **Choose…** next to *Output file* and pick **Documents/NesTwee**, one of your folders, or **Choose another folder…**.
+
+The built file replaces any older file with the same name in that folder. If you save into your story folder, NesTwee skips its own output when reading your story, so it won't build your story into itself.
 
 ### Build a story on a tablet
 
@@ -262,8 +280,9 @@ The tablet app works like the desktop one (see sections 2 to 8), with these diff
 | **Add files…** | **Add files or .zip…** (a .zip counts as a whole folder) |
 | **Open output** | **Preview** (plays the story in the app) |
 | **Show in folder** | **Share** |
-| Output file anywhere | Always saved in **Documents/NesTwee** under the name you give |
-| Watch mode, extra format folders | Not available on Android |
+| Output file anywhere | **Documents/NesTwee**, or any folder you've given permission to |
+| Watch mode | Works with folders added with **Add folder** |
+| Extra format folders | Not available on Android (use **Import format.js…**) |
 
 ### Story formats on Android
 
