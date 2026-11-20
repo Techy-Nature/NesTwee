@@ -265,7 +265,18 @@ function isOutputFile(item, path, outFile) {
 	return !!outFile && `${item.place}/${path}` === String(outFile);
 }
 
-async function readFolder(item, { skipHidden = false, outFile = '' } = {}) {
+/** Plain words for the errors a too-big story causes in the browser. */
+function tooBigMessage(err) {
+	const m = (err && err.message) || String(err);
+	if (/invalid string length|out of memory|allocation failed|array buffer allocation/i.test(m)) {
+		return 'This story is too big for this device\'s memory. Large music, video or image files in the folder are the usual cause: move them out of the story folder, or build on a computer.';
+	}
+	return m;
+}
+
+const READ_BATCH_BYTES = 6 * 1024 * 1024;
+
+async function readFolder(item, { skipHidden = false, outFile = '', log = null } = {}) {
 	const listed = (await listFolder(item)).filter(
 		(f) =>
 			engine.fileKind(f.path) &&
@@ -273,12 +284,33 @@ async function readFolder(item, { skipHidden = false, outFile = '' } = {}) {
 			!isOutputFile(item, f.path, outFile)
 	);
 	const files = [];
-	// Read in batches so one huge folder doesn't stall the bridge.
-	for (let i = 0; i < listed.length; i += 40) {
-		const batch = listed.slice(i, i + 40);
-		const r = await FolderAccess.readFiles({ uri: item.uri, ids: batch.map((f) => f.id) });
-		const byId = new Map((r.files || []).map((f) => [f.id, f.data]));
-		for (const f of batch) if (byId.has(f.id)) files.push({ path: f.path, bytes: base64ToBytes(byId.get(f.id)) });
+	// Read in small batches (by count and by size) so big music or image files
+	// never have to cross from Android to the app all at once.
+	const batches = [];
+	let batch = [];
+	let bytes = 0;
+	for (const f of listed) {
+		if (batch.length && (batch.length >= 40 || bytes + (f.size || 0) > READ_BATCH_BYTES)) {
+			batches.push(batch);
+			batch = [];
+			bytes = 0;
+		}
+		batch.push(f);
+		bytes += f.size || 0;
+	}
+	if (batch.length) batches.push(batch);
+	for (const b of batches) {
+		const r = await FolderAccess.readFiles({ uri: item.uri, ids: b.map((f) => f.id) });
+		const byId = new Map((r.files || []).map((f) => [f.id, f]));
+		for (const f of b) {
+			const got = byId.get(f.id);
+			if (!got) continue;
+			if (got.skipped) {
+				if (log) log({ level: 'warn', message: `Skipped ${f.path}: ${got.skipped}.`, time: Date.now() });
+				continue;
+			}
+			files.push({ path: f.path, bytes: base64ToBytes(got.data) });
+		}
 	}
 	return files;
 }
@@ -621,8 +653,9 @@ const api = {
 	async build(config) {
 		const started = Date.now();
 		let sources, modules, head;
+		const early = [];
 		try {
-			const opts = { skipHidden: !!config.skipHidden, outFile: config.outFile };
+			const opts = { skipHidden: !!config.skipHidden, outFile: config.outFile, log: (e) => early.push(e) };
 			sources = await resolveRefs(config.sources, opts);
 			modules = await resolveRefs(config.modules, opts);
 			[head] = config.headFile ? await resolveRefs([config.headFile]) : [];
@@ -632,16 +665,28 @@ const api = {
 		if (!sources.length) {
 			return { ok: false, log: [{ level: 'error', message: 'No story files were chosen. Add your story folder, a .zip of it, or its files.', time: Date.now() }] };
 		}
-		const res = engine.build({
-			sources,
-			modules,
-			head: head || null,
-			formats: await allFormats(),
-			cfg: { ...config, outFile: config.outFile || 'NesTwee/story.html' },
-			creatorVersion: VERSION,
-		});
+		let res;
+		try {
+			res = engine.build({
+				sources,
+				modules,
+				head: head || null,
+				formats: await allFormats(),
+				cfg: { ...config, outFile: config.outFile || 'NesTwee/story.html' },
+				creatorVersion: VERSION,
+			});
+		} catch (err) {
+			return { ok: false, log: [...early, { level: 'error', message: tooBigMessage(err), time: Date.now() }] };
+		}
 		if (!res.ok) return res;
-		const saved = await saveOutput(config.outFile, res.output, (e) => res.log.push(e));
+		res.log.unshift(...early);
+		let saved;
+		try {
+			saved = await saveOutput(config.outFile, res.output, (e) => res.log.push(e));
+		} catch (err) {
+			res.log.push({ level: 'error', message: `Built, but couldn't save: ${tooBigMessage(err)}`, time: Date.now() });
+			return { ok: false, log: res.log };
+		}
 		res.log.push({ level: 'success', message: `Built ${saved.name} in ${Date.now() - started} ms (${res.stats.storyPassages} story passages). Saved to ${saved.where}.`, time: Date.now() });
 		return { ok: true, outFile: saved.where, stats: res.stats, log: res.log, text: res.output };
 	},
@@ -814,6 +859,35 @@ function renderFolderSettings(box, { toast = () => {} } = {}) {
 	return refresh;
 }
 
+/** After the page had to restart (a build used up the memory), says what happened. */
+async function showCrashNote() {
+	if (!native) return;
+	let note = '';
+	try {
+		note = (await FolderAccess.takeCrashNote()).note;
+	} catch {
+		return;
+	}
+	if (!note) return;
+	const wrap = document.createElement('div');
+	wrap.id = 'nt-folders';
+	wrap.setAttribute('role', 'alertdialog');
+	wrap.setAttribute('aria-modal', 'true');
+	wrap.setAttribute('aria-labelledby', 'nt-crash-title');
+	wrap.innerHTML =
+		'<div class="nt-folders-sheet"><h2 id="nt-crash-title">NesTwee had to restart</h2>' +
+		'<p>The last build needed more memory than this device could give it. This usually means the story folder holds large music, video or image files, which get packed into the built story.</p>' +
+		'<p>Move big media out of the story folder (and link to it instead), or build this story on a computer.</p>' +
+		'<button type="button" class="btn btn-primary" data-ok>OK</button></div>';
+	wrap.addEventListener('click', (e) => {
+		if (e.target === wrap || e.target.closest('[data-ok]')) wrap.remove();
+	});
+	document.body.append(wrap);
+	wrap.querySelector('button').focus();
+}
+
 window.nestwee = api;
 window.nestweeMobile = { renderFolderSettings };
 loadLibrary();
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showCrashNote);
+else showCrashNote();

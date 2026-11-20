@@ -19,6 +19,8 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -39,6 +41,9 @@ public class FolderAccessPlugin extends Plugin {
 
     private static final int MAX_FILES = 20000;
     private static final java.util.Set<String> SKIP_DIRS = new java.util.HashSet<>(java.util.Arrays.asList(".git", "node_modules"));
+    /** Files bigger than this are skipped rather than read (they'd make a story too big to open). */
+    private static final long MAX_FILE_BYTES = 64L * 1024 * 1024;
+    private static final String TOO_BIG = "This story is too big for this device's memory. Large music, video or image files in the folder are the usual cause: move them out of the story folder, or build on a computer.";
     private static final int FLAGS = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
 
     /** Opens Android's folder picker and keeps permission for the folder chosen. */
@@ -71,6 +76,17 @@ public class FolderAccessPlugin extends Plugin {
             }
         }
         call.resolve(describe(tree));
+    }
+
+    /** Whether the page had to restart last time (out of memory), and clears it: { note }. */
+    @PluginMethod
+    public void takeCrashNote(PluginCall call) {
+        android.content.SharedPreferences p = getContext().getSharedPreferences(MainActivity.PREFS, android.content.Context.MODE_PRIVATE);
+        String note = p.getString(MainActivity.CRASH_NOTE, "");
+        p.edit().remove(MainActivity.CRASH_NOTE).apply();
+        JSObject r = new JSObject();
+        r.put("note", note);
+        call.resolve(r);
     }
 
     /** Folders NesTwee currently has permission for. */
@@ -166,6 +182,9 @@ public class FolderAccessPlugin extends Plugin {
         } catch (SecurityException e) {
             call.reject("NesTwee no longer has permission for this folder. Give permission again in the Accessibility settings, or add the folder again.", "NO_PERMISSION");
             return;
+        } catch (OutOfMemoryError e) {
+            call.reject(TOO_BIG, "TOO_BIG");
+            return;
         } catch (Exception e) {
             call.reject("Couldn't read this folder: " + e.getMessage());
             return;
@@ -194,7 +213,15 @@ public class FolderAccessPlugin extends Plugin {
             for (int i = 0; i < list.length(); i++) {
                 String id = list.getString(i);
                 Uri doc = DocumentsContract.buildDocumentUriUsingTree(tree, id);
-                ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                long size = sizeOf(cr, doc);
+                if (size > MAX_FILE_BYTES) {
+                    JSObject skipped = new JSObject();
+                    skipped.put("id", id);
+                    skipped.put("skipped", "too big (" + (size / (1024 * 1024)) + " MB)");
+                    out.put(skipped);
+                    continue;
+                }
+                ByteArrayOutputStream bytes = new ByteArrayOutputStream(size > 0 ? (int) size : 8192);
                 try (InputStream in = cr.openInputStream(doc)) {
                     if (in == null) continue;
                     int n;
@@ -207,6 +234,10 @@ public class FolderAccessPlugin extends Plugin {
             }
         } catch (SecurityException e) {
             call.reject("NesTwee no longer has permission for this folder. Give permission again in the Accessibility settings, or add the folder again.", "NO_PERMISSION");
+            return;
+        } catch (OutOfMemoryError e) {
+            out = null;
+            call.reject(TOO_BIG, "TOO_BIG");
             return;
         } catch (Exception e) {
             call.reject("Couldn't read a file in this folder: " + e.getMessage());
@@ -254,7 +285,6 @@ public class FolderAccessPlugin extends Plugin {
                 call.reject("Couldn't create " + name + " in this folder.");
                 return;
             }
-            byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
             OutputStream out;
             try {
                 out = cr.openOutputStream(target, "wt");
@@ -265,17 +295,30 @@ public class FolderAccessPlugin extends Plugin {
                 call.reject("Couldn't write " + name + ".");
                 return;
             }
-            try (OutputStream o = out) {
-                o.write(bytes);
+            try (Writer w = new OutputStreamWriter(out, StandardCharsets.UTF_8)) {
+                for (int i = 0; i < data.length(); i += 65536) {
+                    w.write(data, i, Math.min(65536, data.length() - i));
+                }
             }
             JSObject r = new JSObject();
             r.put("uri", target.toString());
             call.resolve(r);
         } catch (SecurityException e) {
             call.reject("NesTwee no longer has permission to save in this folder. Give permission again in the Accessibility settings.", "NO_PERMISSION");
+        } catch (OutOfMemoryError e) {
+            call.reject(TOO_BIG, "TOO_BIG");
         } catch (Exception e) {
             call.reject("Couldn't save " + name + ": " + e.getMessage());
         }
+    }
+
+    private static long sizeOf(ContentResolver cr, Uri doc) {
+        try (Cursor c = cr.query(doc, new String[] { DocumentsContract.Document.COLUMN_SIZE }, null, null, null)) {
+            if (c != null && c.moveToFirst() && !c.isNull(0)) return c.getLong(0);
+        } catch (Exception ignored) {
+            // Unknown size; read it anyway.
+        }
+        return -1;
     }
 
     /** { uri, name, place } where place is a readable location like "Documents/Stories". */
