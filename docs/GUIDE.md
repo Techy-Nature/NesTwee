@@ -296,6 +296,7 @@ All the built-in formats (SugarCube, Harlowe, Chapbook, Snowman, Duplex and Pape
 | --- | --- |
 | "App not installed" | Uninstall the older NesTwee first, then install again. |
 | "NesTwee no longer has permission for this folder" | Give permission again in **Accessibility → Folder permissions**, or remove the folder from your sources and add it again. This happens if the folder was moved, renamed or deleted. |
+| The app closes or says "NesTwee had to restart" while building | The story is too big for the device's memory. Images, music and video in your story folder are packed into the built story, so large ones add up fast. Move them out of the story folder (and link to them instead), or build on a computer. Files over 64 MB are skipped with a message. |
 | The folder picker says "Can't use this folder" | Android blocks the top of your storage and the Download folder. Pick a folder inside them instead. |
 | The summary shows no Twee files | Make sure the zip holds `.twee` or `.tw` files (any subfolder is fine). If they're in a folder whose name starts with a dot, turn off **Skip hidden files**. |
 | A story doesn't play right in Preview | Tap **Share** and open the file in Chrome to play it as a normal web page. |

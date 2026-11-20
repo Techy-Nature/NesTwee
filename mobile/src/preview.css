@@ -79,3 +79,7 @@
 	font-weight: 400;
 	word-break: break-all;
 }
+.nt-folders-sheet p {
+	margin: 0 0 0.4em;
+	line-height: 1.45;
+}
