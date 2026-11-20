@@ -480,6 +480,15 @@
 		const kind = res.proofing ? 'proofing format' : 'story format';
 		logEntry({ level: 'success', message: `Imported ${res.name} ${res.version} as ${kind} “${res.id}”.` });
 		toast(`Imported ${res.name} ${res.version} (${res.id}).`, 'success');
+		await rebuildIfWatching('the story format changed');
+	}
+
+	/** Watch mode only notices source files, so rebuild by hand when the format or its settings change. */
+	async function rebuildIfWatching(why) {
+		if (!state.watching) return;
+		logEntry({ level: 'info', message: `Rebuilding because ${why}: ${state.build.outFile}` });
+		const res = await api.watchStart(buildConfig());
+		if (res && res.first) handleBuildResult(res.first);
 	}
 
 	function renderBuildForm() {
@@ -745,7 +754,7 @@
 		);
 		$('#build-out').addEventListener('change', (e) => updateBuild({ outFile: e.target.value.trim() }));
 		$('#build-out-browse').addEventListener('click', chooseBuildOutput);
-		$('#build-format').addEventListener('change', (e) => updateBuild({ format: e.target.value }));
+		$('#build-format').addEventListener('change', (e) => (updateBuild({ format: e.target.value }), rebuildIfWatching('the story format changed')));
 		$('#build-proof-format').addEventListener('change', (e) => updateBuild({ proofFormat: e.target.value }));
 		$('#build-import-format').addEventListener('click', importFormat);
 		$('#build-start').addEventListener('change', (e) => updateBuild({ start: e.target.value.trim() }));
@@ -913,6 +922,7 @@
 		await api.removeImportedFormat(id);
 		await loadFormats();
 		toast(`Removed imported format “${id}”.`);
+		await rebuildIfWatching('the story format changed');
 	}
 
 	function removeFormatDir(p) {

@@ -18,7 +18,7 @@ Copyright © 2014–2020 Thomas Michael Edwards. Simplified BSD (2-Clause) Licen
 | Duplex | 1.8.0 | Adularia for Neston | MIT (`storyformats/duplex-1/LICENSE`) |
 | Paperthin | 1.0.0 | Chris Klimas | Zlib/libpng |
 
-These are unmodified `format.js` files, as distributed with Twine 2 and Tweego, and (for Duplex) from the `1.8.0` tag of [Techy-Nature/duplex-story-format](https://github.com/Techy-Nature/duplex-story-format).
+These are unmodified `format.js` files, as distributed with Twine 2 and Tweego, and (for Duplex) from the `main` branch (1.10.0) of [Techy-Nature/duplex-story-format](https://github.com/Techy-Nature/duplex-story-format).
 
 ### Zlib license (Harlowe, Paperthin)
 
