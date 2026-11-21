@@ -105,6 +105,8 @@ The **Story formats** page lists every format NesTwee can use, with its version 
 
 NesTwee comes with SugarCube 2, Harlowe 3, Chapbook 1, Snowman 2, Duplex 1 and Paperthin 1 (a proofing format). You're not limited to those or to the built-in presets.
 
+The bundled Duplex is 1.10.1. In it, a story can decide whether readers may switch between append and replace in Settings: `UI.settings.storymodeshow(false)` in Story JavaScript, or `<<set $storymodeshow = false>>` in `StoryInit`, keeps that choice for the author and mods. See the [Duplex documentation](https://techy-nature.github.io/duplex-story-format/#modes) for the details.
+
 ### Import a single format (easiest)
 
 1. Download the format you want. You need its `format.js` file (story formats, proofing formats and editing formats all come as a `format.js`).
@@ -288,7 +290,7 @@ The tablet app works like the desktop one (see sections 2 to 8), with these diff
 
 ### Story formats on Android
 
-All the built-in formats (SugarCube, Harlowe, Chapbook, Snowman, Duplex and Paperthin) are included. To add another, download its `format.js` to your device, then tap **Import format.js** on the Formats page and pick it.
+All the built-in formats (SugarCube, Harlowe, Chapbook, Snowman, Duplex 1.10.1 and Paperthin) are included. To add another, download its `format.js` to your device, then tap **Import format.js** on the Formats page and pick it.
 
 ### Troubleshooting on Android
 
