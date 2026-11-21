@@ -485,6 +485,8 @@
 			if (!res.ok) return toast(`Couldn't import it: ${res.error}`, 'error', 6000);
 			await loadFormats();
 			toast(`Imported ${res.name} ${res.version}.`, 'success');
+			// Watch mode only notices source files, so rebuild now that the format changed.
+			if (state.watching) await api.watchStart(buildConfig());
 		});
 	}
 

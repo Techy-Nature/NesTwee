@@ -39,7 +39,7 @@ Extras that Tweego doesn't have:
 
 - **Presets** for build settings (format, start passage, options and, if you like, your folders) and for accessibility settings. A few built-in presets are included.
 - **A missing-IFID helper** that shows the `StoryData` snippet to paste, with copy buttons.
-- **Bundled story formats**: SugarCube 2.37.3, Harlowe 3.3.9, Chapbook 1.2.3, Snowman 2.0.2, Duplex 1.8.0 and Paperthin 1.0.0, so it works straight away.
+- **Bundled story formats**: SugarCube 2.37.3, Harlowe 3.3.9, Chapbook 1.2.3, Snowman 2.0.2, Duplex 1.10.0 and Paperthin 1.0.0, so it works straight away.
 - **Any other format, including proofing formats**: **Import format.js…** copies any Twine 2 story or proofing format into NesTwee, and **Proofing copy** builds your story with a proofing format of your choice.
 - **A command-line twin**, `nestwee-cli`, that accepts Tweego's flags (handy for scripts and CI).
 
