@@ -167,7 +167,7 @@ test('formats wrapped in Object.assign (like Duplex) are discovered', () => {
 	const duplex = formats.getByID('duplex-1');
 	assert.ok(duplex);
 	assert.strictEqual(duplex.name, 'Duplex');
-	assert.strictEqual(duplex.version, '1.10.0');
+	assert.strictEqual(duplex.version, '1.10.1');
 	assert.match(duplex.source(), /\{\{STORY_DATA\}\}/);
 });
 
