@@ -1,5 +1,3 @@
-
-Enter file contents here
 Copyright (c) 2026 [Neston Linden Toftwyn](mailto:techy.nature.art@gmail.com).
 All rights reserved.
 
